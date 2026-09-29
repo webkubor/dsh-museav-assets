@@ -1,0 +1,74 @@
+{
+  "name": "dsh-museav-assets",
+  "version": "0.1.0",
+  "description": "MUSE AV 资产台：在 DSH 主区加一个「资产」tab，按项目（工作区）看素材库与最近出图，点素材复制直链当垫图用。基于本机 museav CLI，不碰任何密钥。",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./types/client.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "prepublishOnly": "npm run check && npm test",
+    "check": "for f in lib/*.js; do node --check \"$f\" || exit 1; done",
+    "test": "node --test test/*.test.mjs",
+    "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/dsh-museav-assets/lib/ && rsync -av types package.json cordis.patch.yml README.md README.en.md LICENSE ~/.dsh/profiles/web/node_modules/dsh-museav-assets/"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "museav",
+    "assets",
+    "image-generation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webkubor/dsh-museav-assets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webkubor/dsh-museav-assets/issues"
+  },
+  "homepage": "https://github.com/webkubor/dsh-museav-assets#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "README.en.md",
+    "cordis.patch.yml",
+    "lib",
+    "types"
+  ],
+  "devDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.4"
+  }
+}

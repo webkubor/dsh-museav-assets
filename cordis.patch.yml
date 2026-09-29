@@ -1,0 +1,10 @@
+# dsh-museav-assets bundle patch：把资产台插入 web profile。
+#
+# 作为 dsh.bundle.patch 被 dsh 加载器消费。insert 引用本包，加载器从 profile 的
+# node_modules 解析它并挂成 Cordis 插件。
+# 不写 config = 用插件 Config 默认值（见 lib/index.js export const Config）。
+- insert:
+    # 插件只暴露 4 条只读/轻写路由，全部 fail-open：CLI 没装、没登录、出错都回
+    # {ok:false,error}，不影响 boot graph。
+    - id: dsh-museav-assets
+      name: 'dsh-museav-assets'
