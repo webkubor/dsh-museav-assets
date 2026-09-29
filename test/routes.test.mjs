@@ -34,16 +34,55 @@ case "$1" in
         echo "11111111-2222-3333-4444-555555555555"
         exit 0 ;;
       assets)
-        echo "「IP账户运营」素材库（1 条）:" >&2
-        echo "  630b8428-394f-472a-ad27-036dce46e9c7  (未命名)            image" >&2
-        printf '630b8428-394f-472a-ad27-036dce46e9c7\\thttps://img.webkubor.online/x.png\\n'
-        exit 0 ;;
+        case "$3" in
+          add)
+            # add 的第 4 个参数是文件路径：断言它真的落成了文件，再回一个直链
+            if [ ! -f "$4" ]; then echo "add: 文件不存在 $4" >&2; exit 1; fi
+            if [ ! -s "$4" ]; then echo "add: 文件是空的" >&2; exit 1; fi
+            echo "✅ 已入素材库" >&2
+            echo "https://img.webkubor.online/uploaded.png"
+            exit 0 ;;
+          rm)
+            # rm <id>：$3 是子命令，$4 才是素材 id
+            echo "✅ 素材已删：$4" >&2
+            echo "$4"
+            exit 0 ;;
+          *)
+            echo "「IP账户运营」素材库（1 条）:" >&2
+            echo "  630b8428-394f-472a-ad27-036dce46e9c7  (未命名)            image" >&2
+            printf '630b8428-394f-472a-ad27-036dce46e9c7\\thttps://img.webkubor.online/x.png\\n'
+            exit 0 ;;
+        esac ;;
       *)
         echo "工作区（1 个）:" >&2
         echo "  2282ad52-b0e9-4c52-bcf1-339c8a43adad  IP账户运营           出图 12/13  素材 1" >&2
         echo "2282ad52-b0e9-4c52-bcf1-339c8a43adad"
         exit 0 ;;
     esac ;;
+  templates)
+    case "$2" in
+      create)
+        echo "✅ 模板已建" >&2
+        echo "77777777-8888-9999-aaaa-bbbbbbbbbbbb"
+        exit 0 ;;
+      delete)
+        echo "✅ 已删" >&2
+        echo "$3"
+        exit 0 ;;
+      publish|unshare)
+        echo "✅ 可见性已改：$2" >&2
+        echo "$3"
+        exit 0 ;;
+    esac
+    echo "可用模板（1 个）:" >&2
+    echo "  9798dde2-7b21-444a-9c6a-78a5c3490f18  演唱会海报·小红书风  v1.0.0  webkubor@163.com 演唱会  3:4  [图片]  字段:subject,title [个人]" >&2
+    echo "9798dde2-7b21-444a-9c6a-78a5c3490f18"
+    exit 0 ;;
+  gen)
+    # gen 同步跑完，stdout 是成品直链
+    if [ -z "$2" ] && [ -z "$3" ]; then echo "gen: 缺提示词" >&2; exit 1; fi
+    echo "https://img.webkubor.online/generated/stub.png"
+    exit 0 ;;
   jobs)
     echo '[{"id":"c2ee0e1d-7a54-439a-9feb-49296b023c47","status":"done","media_type":"image","model":"ChatGPT Image2.5","cdn_url":"https://img.webkubor.online/x.png","prompt":"小红书封面","ratio":"3:4","created_at":"2026-09-29T09:47:57.583131+00:00","workspace_id":null,"elapsed_ms":39494,"error":null}]'
     exit 0 ;;
@@ -140,14 +179,16 @@ test('inject 覆盖代码里用到的每个 ctx.* —— 漏声明只会让插�
   assert.ok(!inject.includes('config'), "inject 里不该有 'config'：函数式插件读不到它，声明了只会 pending")
 })
 
-test('四条路由各注册一次，路径互不重复', async (t) => {
+test('六条路由各注册一次，路径互不重复', async (t) => {
   const { routes, restore } = await boot(stubBin)
   t.after(restore)
   assert.deepEqual([...routes.keys()].sort(), [
     '/api/dsh-museav-assets/assets',
+    '/api/dsh-museav-assets/gen',
     '/api/dsh-museav-assets/health',
     '/api/dsh-museav-assets/jobs',
     '/api/dsh-museav-assets/projects',
+    '/api/dsh-museav-assets/templates',
   ])
 })
 
@@ -235,4 +276,113 @@ test('CLI 不存在时也不抛 —— health 如实说没找到', async (t) => 
   assert.equal(res.body.ok, false)
   assert.equal(res.body.cli.version, null)
   assert.equal(res.body.projectLimit, 5)
+})
+
+test('GET /templates 把归属与分类翻译成 CLI 的开关', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+
+  const mine = await call('/api/dsh-museav-assets/templates?source=mine')
+  assert.equal(mine.status, 200)
+  assert.equal(mine.body.ok, true)
+  assert.equal(mine.body.templates.length, 1)
+  assert.equal(mine.body.templates[0].name, '演唱会海报·小红书风')
+  assert.equal(mine.body.templates[0].source, '个人')
+  assert.equal(mine.body.templates[0].ratio, '3:4')
+  assert.equal(mine.body.templates[0].fieldCount, 2)
+
+  // 未知 source 不该被当成某个开关传下去，宁可当全量
+  const weird = await call('/api/dsh-museav-assets/templates?source=%E4%B8%8D%E5%AD%98%E5%9C%A8')
+  assert.equal(weird.body.source, 'all')
+})
+
+test('POST /assets 传素材：base64 落成临时文件交给 CLI，临时目录事后清空', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  const png = Buffer.from('89504e470d0a1a0a', 'hex').toString('base64')
+
+  const noProject = await call('/api/dsh-museav-assets/assets', { method: 'POST', body: { data: png, filename: 'a.png' } })
+  assert.equal(noProject.status, 400)
+
+  const ok = await call('/api/dsh-museav-assets/assets', {
+    method: 'POST',
+    body: { project: '2282ad52-b0e9-4c52-bcf1-339c8a43adad', filename: '垫图.png', data: png, name: '垫图' },
+  })
+  assert.equal(ok.status, 200)
+  assert.equal(ok.body.ok, true, `期望上传成功，实际：${JSON.stringify(ok.body)}`)
+  assert.equal(ok.body.url, 'https://img.webkubor.online/uploaded.png')
+  // 文件名里的路径成分不能被带进临时路径：只留 basename
+  assert.equal(ok.body.filename, '垫图.png')
+})
+
+test('POST /assets 载荷超限回 400 + 人话，不是网络错误', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  const huge = 'A'.repeat(11 * 1024 * 1024 + 16)
+  const res = await call('/api/dsh-museav-assets/assets', {
+    method: 'POST',
+    body: { project: 'p', filename: 'big.png', data: huge },
+  })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.ok, false)
+  assert.match(res.body.error, /太大/)
+})
+
+test('DELETE /assets?id= 删素材，缺 id 回 400', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  const bad = await call('/api/dsh-museav-assets/assets', { method: 'DELETE' })
+  assert.equal(bad.status, 400)
+  const ok = await call('/api/dsh-museav-assets/assets?id=630b8428-394f-472a-ad27-036dce46e9c7', { method: 'DELETE' })
+  assert.equal(ok.status, 200)
+  assert.equal(ok.body.ok, true)
+  assert.equal(ok.body.id, '630b8428-394f-472a-ad27-036dce46e9c7')
+})
+
+test('POST /templates 新建 / 删除 / 分享，都翻译成对应 CLI 子命令', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+
+  const noName = await call('/api/dsh-museav-assets/templates', { method: 'POST', body: { prompt: '{a}' } })
+  assert.equal(noName.status, 400)
+
+  const noPrompt = await call('/api/dsh-museav-assets/templates', { method: 'POST', body: { name: '封面' } })
+  assert.equal(noPrompt.status, 400)
+
+  const created = await call('/api/dsh-museav-assets/templates', {
+    method: 'POST',
+    body: { name: '演唱会海报', prompt: '{artist} 在 {city} 的演唱会海报', category: '演唱会', ratio: '3:4' },
+  })
+  assert.equal(created.status, 200)
+  assert.equal(created.body.ok, true)
+  assert.equal(created.body.id, '77777777-8888-9999-aaaa-bbbbbbbbbbbb')
+
+  const shared = await call('/api/dsh-museav-assets/templates', {
+    method: 'POST', body: { action: 'share', id: '9798dde2-7b21-444a-9c6a-78a5c3490f18' },
+  })
+  assert.equal(shared.body.ok, true)
+  assert.equal(shared.body.shared, true)
+
+  const unshared = await call('/api/dsh-museav-assets/templates', {
+    method: 'POST', body: { action: 'unshare', id: '9798dde2-7b21-444a-9c6a-78a5c3490f18' },
+  })
+  assert.equal(unshared.body.shared, false)
+
+  const deleted = await call('/api/dsh-museav-assets/templates', {
+    method: 'POST', body: { action: 'delete', id: '9798dde2-7b21-444a-9c6a-78a5c3490f18' },
+  })
+  assert.equal(deleted.body.ok, true)
+  assert.equal(deleted.body.id, '9798dde2-7b21-444a-9c6a-78a5c3490f18')
+})
+
+test('POST /gen 校验 prompt/模板二选一，并把比例白名单挡住', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  const empty = await call('/api/dsh-museav-assets/gen', { method: 'POST', body: { prompt: '  ' } })
+  assert.equal(empty.status, 400)
+  const badRatio = await call('/api/dsh-museav-assets/gen', { method: 'POST', body: { prompt: 'x', ratio: '7:13' } })
+  assert.equal(badRatio.status, 400)
+  const good = await call('/api/dsh-museav-assets/gen', { method: 'POST', body: { prompt: '一张海报', ratio: '3:4' } })
+  assert.equal(good.status, 200)
+  assert.equal(good.body.ok, true)
 })
