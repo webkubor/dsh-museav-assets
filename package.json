@@ -56,9 +56,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {
-    "@deepseek-ai/schemastery": "^3.18.1"
-  },
   "files": [
     "CHANGELOG.md",
     "LICENSE",
@@ -67,8 +64,5 @@
     "cordis.patch.yml",
     "lib",
     "types"
-  ],
-  "devDependencies": {
-    "@deepseek-ai/schemastery": "^3.18.4"
-  }
+  ]
 }

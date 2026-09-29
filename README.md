@@ -89,4 +89,8 @@ stdout/stderr 分工就是它的脚本契约：
 npm run check && npm test   # 28 个：解析契约 12 + 路由 8 + UI 8
 ```
 
-路由测试用 stub 可执行文件顶替 CLI（`cliBin` 可配），**全程不联网、不碰真账号**。
+路由测试用 stub 可执行文件顶替 CLI（走 `MUSEAW_BIN` 环境变量），**全程不联网、不碰真账号**。
+
+CLI 路径为什么是环境变量而不是插件配置：这套 Cordis 的函数式插件读不到 `ctx.config`
+（声明了会永远 `pending (waiting for service: config)`）。`MUSEAW_BIN` 也正好和 profile
+里 MCP 桥的约定一致。改它不用重载插件 —— 每次请求现取。

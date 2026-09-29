@@ -5,14 +5,19 @@
  *   1. 路由只注册一次、路径互不相同（SOP 红线：重复 exact 路由会让整棵 Cordis 崩）
  *   2. 上游失败一律 200 + {ok:false,error}，只有参数不合法才 400
  *   3. cliBin 真的被用上了（测试能注入 stub = 运行时能换 CLI 路径）
+ *
+ * 另外加了一条机械检查：代码里用到的每个 ctx.* 都必须在 inject 列表里。
+ * 这不是洁癖 —— 漏声明不会让任何本地测试红，只会在真机上让插件静默变哑
+ * （2026-09-29 首次部署：`cannot get property "config" without inject`）。
  */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { EventEmitter } from 'node:events'
-import { chmodSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const STUB = `#!/bin/sh
 # stub museav：按参数回放真机输出形状
@@ -55,18 +60,28 @@ function makeStub () {
   return file
 }
 
-/** 起一个假 host：抓下注册的路由，返回 { routes, call }。 */
-async function boot (config) {
+/**
+ * 起一个假 host：抓下注册的路由，返回 { routes, call, restore }。
+ *
+ * CLI 路径走 `MUSEAW_BIN` 环境变量而不是插件配置 —— 这套 Cordis 的函数式插件
+ * 读不到 ctx.config（见 lib/index.js 的说明），环境变量是唯一能换掉 CLI 的口子，
+ * 也正好和 profile 里 MCP 桥的 MUSEAV_BIN 约定一致。
+ */
+async function boot (bin) {
   const { apply } = await import('../lib/index.js')
   const routes = new Map()
-  const ctx = {
-    config: { cliBin: config.cliBin, timeoutMs: 5000, maxJobs: 50 },
+  const previous = process.env.MUSEAW_BIN
+  if (bin !== undefined) process.env.MUSEAW_BIN = bin
+  const restore = () => {
+    if (previous === undefined) delete process.env.MUSEAW_BIN
+    else process.env.MUSEAW_BIN = previous
+  }
+  apply({
     effect: (fn) => fn(),
     webServer: {
       register: (route) => { routes.set(route.path, route.handler) },
     },
-  }
-  apply(ctx)
+  })
 
   const call = (path, { method = 'GET', headers = {}, url = path, body = null } = {}) => {
     const request = new EventEmitter()
@@ -94,13 +109,40 @@ async function boot (config) {
     })
   }
 
-  return { routes, call }
+  return { routes, call, restore }
 }
 
 const stubBin = makeStub()
 
-test('四条路由各注册一次，路径互不重复', async () => {
-  const { routes } = await boot({ cliBin: stubBin })
+test('inject 覆盖代码里用到的每个 ctx.* —— 漏声明只会让插件在真机上静默变哑', async () => {
+  const { inject } = await import('../lib/index.js')
+  const source = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../lib/index.js'),
+    'utf8',
+  )
+  // 先去注释：lib/index.js 里「不要读 ctx.config」这句警告自己就带 ctx.config，
+  // 不去注释就会把注释当代码，误报。URL 里的 // 会被当成行注释截断后半行 ——
+  // 代价只是少扫半行，不会漏报真实的 ctx 用法。
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+  // ctx.effect 是 Cordis fiber 自带的方法，不是注入的服务，不需要声明。
+  const CORE = new Set(['effect'])
+  const used = new Set()
+  for (const m of code.matchAll(/\bctx\.([A-Za-z_][A-Za-z0-9_]*)/g)) used.add(m[1])
+  assert.ok(used.size > 0, '没扫到 ctx.* 用法，检查是不是正则失效了')
+  for (const key of used) {
+    if (CORE.has(key)) continue
+    assert.ok(
+      inject.includes(key),
+      `代码用了 ctx.${key}，但 inject 里没有 '${key}' —— Cordis 要么抛 cannot get property "${key}" without inject，要么永远 pending (waiting for service: ${key})`,
+    )
+  }
+  // 反向：这套 Cordis 里 'config' 不是可注入服务，声明了只会永远等不到。
+  assert.ok(!inject.includes('config'), "inject 里不该有 'config'：函数式插件读不到它，声明了只会 pending")
+})
+
+test('四条路由各注册一次，路径互不重复', async (t) => {
+  const { routes, restore } = await boot(stubBin)
+  t.after(restore)
   assert.deepEqual([...routes.keys()].sort(), [
     '/api/dsh-museav-assets/assets',
     '/api/dsh-museav-assets/health',
@@ -109,8 +151,9 @@ test('四条路由各注册一次，路径互不重复', async () => {
   ])
 })
 
-test('GET /projects 返回合并后的项目与 5 个上限', async () => {
-  const { call } = await boot({ cliBin: stubBin })
+test('GET /projects 返回合并后的项目与 5 个上限', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
   const res = await call('/api/dsh-museav-assets/projects')
   assert.equal(res.status, 200)
   assert.equal(res.body.ok, true)
@@ -121,8 +164,9 @@ test('GET /projects 返回合并后的项目与 5 个上限', async () => {
   assert.equal(res.body.full, false)
 })
 
-test('GET /assets 缺 project 时 400，其余情况 200', async () => {
-  const { call } = await boot({ cliBin: stubBin })
+test('GET /assets 缺 project 时 400，其余情况 200', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
   const bad = await call('/api/dsh-museav-assets/assets')
   assert.equal(bad.status, 400)
   assert.equal(bad.body.ok, false)
@@ -134,8 +178,9 @@ test('GET /assets 缺 project 时 400，其余情况 200', async () => {
   assert.equal(good.body.assets[0].mediaType, 'image')
 })
 
-test('GET /jobs 把 stdout 的 JSON 裁剪成 tab 要的字段', async () => {
-  const { call } = await boot({ cliBin: stubBin })
+test('GET /jobs 把 stdout 的 JSON 裁剪成 tab 要的字段', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
   const res = await call('/api/dsh-museav-assets/jobs?limit=5')
   assert.equal(res.status, 200)
   assert.equal(res.body.jobs.length, 1)
@@ -143,8 +188,9 @@ test('GET /jobs 把 stdout 的 JSON 裁剪成 tab 要的字段', async () => {
   assert.equal(res.body.jobs[0].steps, undefined)
 })
 
-test('POST /projects 校验名字并透传新 id', async () => {
-  const { call } = await boot({ cliBin: stubBin })
+test('POST /projects 校验名字并透传新 id', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
   const empty = await call('/api/dsh-museav-assets/projects', { method: 'POST', body: { name: '   ' } })
   assert.equal(empty.status, 400)
 
@@ -160,8 +206,9 @@ test('POST /projects 校验名字并透传新 id', async () => {
   assert.equal(ok.body.id, '11111111-2222-3333-4444-555555555555')
 })
 
-test('跨源请求被拒', async () => {
-  const { call } = await boot({ cliBin: stubBin })
+test('跨源请求被拒', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
   const res = await call('/api/dsh-museav-assets/projects', {
     headers: { 'sec-fetch-site': 'cross-site' },
   })
@@ -171,8 +218,8 @@ test('跨源请求被拒', async () => {
 
 test('CLI 出错时回 200 + {ok:false,error}，让 tab 内联显示而不是白屏', async (t) => {
   process.env.MUSEAV_STUB_FAIL = '1'
-  t.after(() => { delete process.env.MUSEAV_STUB_FAIL })
-  const { call } = await boot({ cliBin: stubBin })
+  const { call, restore } = await boot(stubBin)
+  t.after(() => { delete process.env.MUSEAV_STUB_FAIL; restore() })
   const res = await call('/api/dsh-museav-assets/projects')
   assert.equal(res.status, 200)
   assert.equal(res.body.ok, false)
@@ -180,8 +227,9 @@ test('CLI 出错时回 200 + {ok:false,error}，让 tab 内联显示而不是白
   assert.deepEqual(res.body.projects, [])
 })
 
-test('CLI 不存在时也不抛 —— health 如实说没找到', async () => {
-  const { call } = await boot({ cliBin: '/nonexistent/museav-does-not-exist' })
+test('CLI 不存在时也不抛 —— health 如实说没找到', async (t) => {
+  const { call, restore } = await boot('/nonexistent/museav-does-not-exist')
+  t.after(restore)
   const res = await call('/api/dsh-museav-assets/health')
   assert.equal(res.status, 200)
   assert.equal(res.body.ok, false)

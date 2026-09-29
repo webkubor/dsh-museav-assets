@@ -96,5 +96,10 @@ output captured from the real CLI.
 npm run check && npm test   # 28: 12 parsing contract + 8 routes + 8 UI
 ```
 
-Route tests substitute a stub executable for the CLI (`cliBin` is configurable) — no
-network, no real account.
+Route tests substitute a stub executable for the CLI (via the `MUSEAW_BIN` environment
+variable) — no network, no real account.
+
+Why an env var rather than plugin config: functional plugins in this Cordis cannot read
+`ctx.config` (declaring it leaves the plugin `pending (waiting for service: config)`).
+`MUSEAW_BIN` also matches the convention already used by the MCP bridge in the profile.
+It is read per request, so changing it needs no plugin reload.

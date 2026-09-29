@@ -108,6 +108,35 @@ test('注册契约：挂到 conversation.view，id 唯一且 order 排在电脑�
   assert.deepEqual(exports.inject.sort(), ['locale', 'slots'])
 })
 
+test('默认落在素材最多的项目上 —— 开在空项目上等于「啥都没有」', () => {
+  const exports = pluginDefinition.factory(() => createReact([]))
+  const { richestProject } = exports
+
+  // 真机那组：第一个空，唯一有素材的排第 4
+  const real = [
+    { id: 'a', name: '默认项目', assetCount: 0, genDone: 39 },
+    { id: 'b', name: '巴基斯坦站点群', assetCount: 0, genDone: 33 },
+    { id: 'c', name: '默认项目', assetCount: 0, genDone: 25 },
+    { id: 'd', name: 'IP账户运营', assetCount: 1, genDone: 12 },
+  ]
+  assert.equal(richestProject(real).id, 'd')
+
+  // 素材数相同时比出图量
+  assert.equal(richestProject([
+    { id: 'x', assetCount: 3, genDone: 1 },
+    { id: 'y', assetCount: 3, genDone: 9 },
+  ]).id, 'y')
+
+  // 全空时也要有个落点，别返回 null 让页面空着
+  assert.equal(richestProject([{ id: 'z', assetCount: 0, genDone: 0 }]).id, 'z')
+  assert.equal(richestProject([]), null)
+
+  // 不能改坏调用方传进来的数组顺序（chip 列表还按原顺序显示）
+  const input = [{ id: 'p', assetCount: 0 }, { id: 'q', assetCount: 5 }]
+  richestProject(input)
+  assert.deepEqual(input.map((x) => x.id), ['p', 'q'])
+})
+
 test('渲染：项目名、素材名、出图记录都出现在页面上', () => {
   const text = texts(render(READY)).join(' ')
   assert.match(text, /IP账户运营/)
