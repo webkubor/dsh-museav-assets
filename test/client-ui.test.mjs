@@ -25,6 +25,8 @@ globalThis.document = {
   createElement: () => ({ textContent: '', appendChild: () => {} }),
   head: { appendChild: () => {} },
 }
+// 组件挂载时会读快照缓存；测试里给个空的，不让它去碰真实的 localStorage
+globalThis.localStorage = { getItem: () => null, setItem: () => {} }
 
 await import('../lib/client.js')
 
@@ -90,7 +92,11 @@ const READY = {
 
 /**
  * 渲染一帧。hook 顺序必须与 AssetsView 里的调用顺序一致：
- * state, form, running, toast, draft, busy, uploading, pendingDelete, zoom, tplForm, tplBusy, tplSource
+ * state, form, running, toast, draft, busy, uploading, pendingDelete, zoom, tplForm, tplBusy,
+ * tplSource
+ *
+ * 顺序对不齐的后果不是"断言失败"而是**组件崩**（form 拿到 false，`form.refs` 直接炸）——
+ * 2026-09-29 加 showFailed 时踩过一次，所以这里把顺序写在注释里，改组件时对着核。
  */
 function render ({ state = READY, form = EMPTY_FORM, zoom = null, tplForm = null, draft = null } = {}) {
   const React = createReact([
@@ -171,20 +177,55 @@ test('选了模板就摊开它的字段', () => {
   assert.equal(labels.length, 2, '模板有 2 个占位符就该渲染 2 个输入框')
 })
 
-test('作品墙是网格看图，不是报表列表', () => {
-  const vdom = render()
+test('作品集只放出的成的：失败记录与逆向记录都不进来', () => {
+  const mixed = {
+    ...READY,
+    jobs: [
+      { ...READY.jobs[0], id: 'ok1', status: 'done', mediaType: 'image' },
+      { ...READY.jobs[0], id: 'bad', status: 'failed', url: null, error: '生成失败了' },
+      { ...READY.jobs[0], id: 'rev', status: 'done', mediaType: 'reverse' },
+      { ...READY.jobs[0], id: 'ok2', status: 'done', mediaType: 'image' },
+    ],
+  }
+  const vdom = render({ state: mixed })
   const walls = findAll(vdom, (n) => n.props?.className === 'dma-wall')
-  assert.equal(walls.length, 1, '要有作品墙')
-  const imgs = findAll(walls[0], (n) => n.type === 'img')
-  assert.equal(imgs.length, 1, '每件作品是一张图')
-  // 旧版那一套（一行一条的 dma-job 列表）不该再出现
-  assert.equal(findAll(vdom, (n) => n.props?.className === 'dma-job').length, 0, '流水列表已被作品墙取代')
+  const imgs = walls.flatMap((w) => findAll(w, (n) => n.type === 'img'))
+  assert.equal(imgs.length, 2, '只有 2 件成的图片作品入墙')
+  // 作品集里连提都不提失败 —— owner 原话：「我又没查错误记录」
+  const all = texts(vdom).join(' ')
+  assert.doesNotMatch(all, /生成失败了/, '失败记录的文案不能出现在作品集里')
+  assert.doesNotMatch(all, /skipped|失败记录|逆向记录/, '作品集里不该出现任何关于失败/逆向的说明')
+  assert.doesNotMatch(all, /\b11\b/, '不该把失败条数摆到界面上')
 })
 
-test('作品墙缩略图：前 12 张 eager，之后 lazy', () => {
+test('图片和视频分家：视频不塞进 <img>，单独一区', () => {
+  const vdom = render({ state: { ...READY, jobs: [
+    { ...READY.jobs[0], id: 'i1', status: 'done', mediaType: 'image' },
+    { ...READY.jobs[0], id: 'v1', status: 'done', mediaType: 'video', model: 'Seedance 2.0', url: 'https://x/a.mp4' },
+  ] } })
+  const text = texts(vdom).join(' ')
+  assert.match(text, /myImages/, '要有「我的出图」')
+  assert.match(text, /myVideos/, '要有「我的视频」')
+  // 视频墙里没有 img
+  const walls = findAll(vdom, (n) => n.props?.className === 'dma-wall')
+  const videoWall = walls.find((w) => findAll(w, (n) => n.props?.className === 'dma-work-video').length)
+  assert.ok(videoWall, '视频要在自己的墙里')
+  assert.equal(findAll(videoWall, (n) => n.type === 'img').length, 0, '视频墙里不许有 img（.mp4 塞 img 就是破图）')
+
+  // 放大层里才用 <video controls> 播
+  const zoom = findAll(
+    render({ state: { ...READY, jobs: [{ ...READY.jobs[0], mediaType: 'video', url: 'https://x/a.mp4' }] },
+      zoom: { ...READY.jobs[0], mediaType: 'video', url: 'https://x/a.mp4' } }),
+    (n) => n.props?.className === 'dma-zoom',
+  )
+  assert.equal(findAll(zoom[0], (n) => n.type === 'video').length, 1, '放大层用 video 播')
+})
+
+test('图片作品缩略图：前 12 张 eager，之后 lazy', () => {
   const many = { ...READY, jobs: Array.from({ length: 20 }, (_, i) => ({ ...READY.jobs[0], id: `j${i}` })) }
   const wall = findAll(render({ state: many }), (n) => n.props?.className === 'dma-wall')[0]
   const imgs = findAll(wall, (n) => n.type === 'img')
+  assert.equal(imgs.length, 20, '20 件作品 20 张图')
   assert.equal(imgs.filter((i) => i.props.loading === 'eager').length, 12, '首屏 12 张预载')
   assert.equal(imgs.filter((i) => i.props.loading === 'lazy').length, 8, '其余懒加载')
 })
@@ -198,11 +239,13 @@ test('模板管理段：新增 / 分享 / 删除入口都在，平台共享的�
 
   const rows = findAll(vdom, (n) => n.props?.className === 'dma-tpl')
   assert.equal(rows.length, 2, '两条模板各一行')
-  assert.match(texts(rows[0]).join(' '), /tplShare/, '我建的模板要有分享按钮')
-  assert.match(texts(rows[0]).join(' '), /tplDelete/, '我建的模板要有删除按钮')
-  const platform = texts(rows[1]).join(' ')
-  assert.doesNotMatch(platform, /tplShare/, '平台共享的模板不是我建的，不该给分享按钮')
-  assert.doesNotMatch(platform, /tplDelete/, '平台共享的模板不该给删除按钮')
+  // 操作按钮现在是图标，文案在 title 上（7 行 × 2 个常驻文字按钮会占掉一整屏）
+  const titles = findAll(rows[0], (n) => typeof n.props?.title === 'string').map((n) => n.props.title)
+  assert.ok(titles.includes('tplShare'), '我建的模板要有分享入口')
+  assert.ok(titles.includes('tplDelete'), '我建的模板要有删除入口')
+  const platformTitles = findAll(rows[1], (n) => typeof n.props?.title === 'string').map((n) => n.props.title)
+  assert.ok(!platformTitles.includes('tplShare'), '平台共享的模板不是我建的，不该给分享入口')
+  assert.ok(!platformTitles.includes('tplDelete'), '平台共享的模板不该给删除入口')
 })
 
 test('打开新增模板表单后，名字和提示词都有输入位', () => {
@@ -271,11 +314,21 @@ test('点开作品出放大层，里面能复制直链和复用提示词', () =>
   assert.match(text, /小红书封面/)
 })
 
-test('失败任务在作品墙上显示状态点，不是空白方块', () => {
-  const failed = { ...READY, jobs: [{ ...READY.jobs[0], status: 'failed', url: null, error: '生成失败了' }] }
-  const vdom = render({ state: failed })
-  const work = findAll(vdom, (n) => n.props?.className === 'dma-work is-failed')
-  assert.equal(work.length, 1, '失败作品单独标出来')
-  assert.equal(work[0].props.onClick(), null, '失败作品点不开大图')
-  assert.match(texts(vdom).join(' '), /生成失败了/)
+
+
+test('挂载时先铺本地快照、后台再刷新 —— CLI 到中台会间歇性抽风', () => {
+  // 快照是纯数据，读它的是一个纯函数：形状对就返回，形状不对/没值就返回 null
+  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../lib/client.js'), 'utf8')
+  assert.ok(source.includes('dsh-museav-assets:cache:v2'), '必须有快照 key')
+  // 关键行为：数据**成功**才覆盖，失败保留旧画面
+  assert.ok(
+    /assets:\s*assets\.ok \? assets\.assets : s\.assets/.test(source),
+    '读取失败时必须保留上一次的 assets，不能清空',
+  )
+  assert.ok(
+    /jobs:\s*jobs\.ok \? jobs\.jobs : s\.jobs/.test(source),
+    '读取失败时必须保留上一次的 jobs，不能清空',
+  )
+  // 挂载时 loading 跟着缓存走：有缓存就立刻有画面
+  assert.ok(source.includes('loading: false, refreshing: true'), '有缓存时挂载即出画面，后台静默刷新')
 })
