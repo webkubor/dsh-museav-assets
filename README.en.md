@@ -30,18 +30,28 @@ session shell: `dsh-user-mirror`'s Memory tab does the same.
 
 ## Install
 
+> ⚠️ **Status (2026-10-02): not published to npm yet, so it cannot be installed on the desktop app.**
+> The host moved from the web UI (3080) to the **desktop app** (19387, profile `desktop`), and the
+> desktop profile is owned exclusively by the app — the CLI refuses plugin operations on it
+> (`profile "desktop" is managed exclusively by the Electron application`), while the app's plugin
+> manager installs from npm. This package is not published yet, so there is currently no install path.
+> The publish pipeline is already proven in the sibling plugins (`.github/workflows/publish.yml` +
+> `push: tags: ['v*']` + GitHub OIDC).
+
+Self-managed profile (one the CLI can write to, e.g. `desktop-local` for local dev):
+
 ```sh
-npm run deploy   # rsync into ~/.dsh/profiles/web/node_modules/dsh-museav-assets/
+npm run deploy   # rsync into ~/.dsh/profiles/desktop-local/node_modules/dsh-museav-assets/
 ```
 
-Then add the package to the profile (`~/.dsh/profiles/web/package.json`):
+Then add the package to that profile (`~/.dsh/profiles/desktop-local/package.json`):
 
 ```jsonc
 "dependencies": { "dsh-museav-assets": "^0.1.0" },
 "dsh": { "profile": { "bundles": [ /* … */, "dsh-museav-assets" ] } }
 ```
 
-Changing profile config requires a restart: `~/.dsh/restart.sh`
+Changing profile config is a topology change: **quit and reopen the desktop app** (`~/.dsh/restart.sh` is retired — it now detects the missing 3080 service and exits 1).
 (never `launchctl kickstart` directly).
 
 Only prerequisite: the local `museav` CLI is logged in (`museav login`).

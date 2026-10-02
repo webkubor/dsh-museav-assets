@@ -28,18 +28,27 @@ ctx.slots.register({
 
 ## 装
 
+> ⚠️ **2026-10-02 现状：还没发 npm，所以桌面端装不上。**
+> 宿主已从 web（3080）迁到**桌面端 app**（19387，profile `desktop`），而桌面 profile 由 app 独占托管 ——
+> CLI 对它做任何插件操作都会被拒（`profile "desktop" is managed exclusively by the Electron application`），
+> app 的插件管理器又是从 npm 装的。**这个包还没发布**，因此目前没有可用的安装路径。
+> 发布链路已经通了（照本目录其它插件：`.github/workflows/publish.yml` + `push: tags: ['v*']` + GitHub OIDC），
+> 发一次就能在 app 的插件管理里装上。
+
+自建 profile（CLI 能管的，例如本地开发用的 `desktop-local`）：
+
 ```sh
-npm run deploy   # rsync 进 ~/.dsh/profiles/web/node_modules/dsh-museav-assets/
+npm run deploy   # rsync 进 ~/.dsh/profiles/desktop-local/node_modules/dsh-museav-assets/
 ```
 
-再把包名加进 profile（`~/.dsh/profiles/web/package.json`）：
+再把包名加进该 profile（`~/.dsh/profiles/desktop-local/package.json`）：
 
 ```jsonc
 "dependencies": { "dsh-museav-assets": "^0.1.0" },
 "dsh": { "profile": { "bundles": [ /* … */, "dsh-museav-assets" ] } }
 ```
 
-改 profile 配置必须重启：`~/.dsh/restart.sh`（**不要**直接 `launchctl kickstart`）。
+拓扑级变更要重启：桌面端是**退出并重开 app**（`~/.dsh/restart.sh` 已作废，现在探测不到 3080 服务会直接以 1 退出）。
 
 前置条件只有一条：本机 `museav` CLI 已登录（`museav login`）。
 插件自己**不读也不转发** `~/.museav.json` 里的 token。
