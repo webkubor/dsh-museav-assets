@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.2
+
+- **修 0.1.1 装不上：`cordis.patch.yml` 的 `id` 缺引号。** 包名迁到 `@dsh-plugins`
+  scope 时只给 `name` 加了引号、漏了 `id`，而 `@` 是 YAML 保留起始字符，于是整个
+  patch 解析失败、dsh 拒绝安装：
+  `Cannot validate installed package …: YAMLException: bad indentation of a mapping entry`。
+  症状是指向配置文件，看着像配置写错，实为包名未引用。**0.1.1 请勿使用。**
+- **补门禁**：`test/cordis-patch.test.mjs` 拦「未加引号的 `@scope` 值」+「id 必须等于包名」。
+  刻意不引 js-yaml（本仓零依赖），改成对源文本做 YAML 标量合法性检查 —— 这类问题是
+  YAML 规范层面的硬错误，不存在误报。已反向验证：把 bug 放回去，测试确实 fail。
+
 ## Unreleased
 
 - **接入发版门禁** —— 与另外三个 dsh 插件同一套：`scripts/prepublish-gate.mjs` +
