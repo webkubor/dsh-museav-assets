@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **接入发版门禁** —— 与另外三个 dsh 插件同一套：`scripts/prepublish-gate.mjs` +
+  `scripts/readme-gate.mjs` + `scripts/gate-lib.mjs`（gate-lib 是 prepublish-gate 的
+  import 依赖，必须一起拷，否则 `ERR_MODULE_NOT_FOUND`），接在 `prepublishOnly` 末尾。
+  真源在 `CortexOS/scripts/release-gate/`，改逻辑改真源，再用
+  `check-release-gate-sync.mjs --fix` 同步 —— **别在本仓就地改**。
+  为什么补：本仓此前是五个插件里唯一没接门禁的（`prepublishOnly` 只跑 `check && test`），
+  四条产物契约和 README 首屏契约都不过。
+- **README 首屏对齐 `open_source_project_baseline`** —— 居中品牌标题 + 4 个
+  for-the-badge 徽章 + Why This 对比表 + 中英切换。此前是裸 `# 标题`，readme-gate 判不合规。
+
+> 发版状态核实（2026-10-02）：scoped 名 `@dsh-plugins/dsh-museav-assets` 在 npm 上
+> **仍不存在（404）**；无 scope 的 `dsh-museav-assets@0.1.0` 存在，且**尚未标 deprecated**。
+> 即上面 0.1.1 写的「已 deprecated 指向本名」目前只是意图 —— 补发成功前，桌面端按
+> scoped 名装不上。
+
 ## 0.1.1
 
 - **包名迁到 `@dsh-plugins/dsh-museav-assets`**（与另外三个插件同一 scope）。

@@ -31,7 +31,7 @@
     }
   },
   "scripts": {
-    "prepublishOnly": "npm run check && npm test",
+    "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs",
     "check": "for f in lib/*.js; do node --check \"$f\" || exit 1; done",
     "test": "node --test test/*.test.mjs",
     "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/${DSH_PROFILE:-desktop}/node_modules/@dsh-plugins/dsh-museav-assets/lib/ && rsync -av types package.json cordis.patch.yml README.md README.en.md LICENSE ~/.dsh/profiles/${DSH_PROFILE:-desktop}/node_modules/@dsh-plugins/dsh-museav-assets/"

@@ -1,7 +1,30 @@
-# dsh-museav-assets
+<h1 align="center">🖼️ dsh-museav-assets</h1>
 
-在 DSH 主区加一个「资产」tab：**按项目（工作区）看 MUSE AV 的素材库和最近出图**。
-点素材即复制直链，可以直接当垫图（`museav gen --ref <url>`）用。
+<p align="center">
+  <strong>在 DSH 里看得见你的素材库。</strong><br>
+  主区多一个「资产」tab：按项目（工作区）看 MUSE AV 的素材库与最近出图，<br>
+  点素材即复制直链，直接当垫图用（<code>museav gen --ref &lt;url&gt;</code>）。
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-museav-assets"><img src="https://img.shields.io/npm/v/%40dsh-plugins%2Fdsh-museav-assets?style=for-the-badge&color=4d6bfe&logo=npm&label=npm" alt="npm" /></a>
+  <img src="https://img.shields.io/badge/runtime_deps-0-5A9E6F?style=for-the-badge" alt="runtime deps" />
+  <img src="https://img.shields.io/badge/license-MIT-777?style=for-the-badge" alt="MIT" />
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=for-the-badge" alt="DSH Plugin" /></a>
+</p>
+
+<p align="center">
+  <a href="README.en.md">English</a> | 中文
+</p>
+
+## Why This
+
+| | 本插件 | `mcp__museav__*` 工具 | 直接敲 CLI |
+|---|---|---|---|
+| 看清「有哪些项目、各有多少素材」 | ✅ 一屏网格 + 计数 | ❌ 单次调用，看不见全貌 | ⚠️ 逐条命令，靠脑记 |
+| 素材拿直链当垫图 | ✅ 点一下复制 | ⚠️ 得先知道素材 id | ⚠️ 手抄 URL |
+| 出图 / 上传能力 | ➖ 不重复实现，转交 MCP | ✅ 完整 | ✅ 完整 |
+| 密钥 | ✅ 不读不转发 `~/.museav.json` | ✅ | ⚠️ token 落在本机明文文件 |
 
 基于本机的 **museav CLI**，不重复造出图能力 —— 出图/上传继续走已经接进 DSH 的
 `mcp__museav__*` 工具（见 profile 的 cordis.patch.yml）。这个插件只补一件事：
