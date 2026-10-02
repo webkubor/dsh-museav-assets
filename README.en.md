@@ -31,7 +31,8 @@ session shell: `dsh-user-mirror`'s Memory tab does the same.
 ## Install
 
 > **Package name: `@dsh-plugins/dsh-museav-assets`** (same scope as the three sibling plugins).
-> The unscoped `dsh-museav-assets` was the original 0.1.0 name; it is deprecated and points here.
+> The unscoped `dsh-museav-assets` was a one-off name published by mistake; it was **unpublished**
+> on 2026-10-02. Use the scoped name only.
 
 On the desktop app, install it from the app's **plugin manager** (it pulls from npm) — the CLI
 cannot write to the `desktop` profile

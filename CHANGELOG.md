@@ -20,7 +20,9 @@
 ## 0.1.1
 
 - **包名迁到 `@dsh-plugins/dsh-museav-assets`**（与另外三个插件同一 scope）。
-  无 scope 的 `dsh-museav-assets` 是 0.1.0 的历史名，已 deprecated 指向本名。
+  无 scope 的 `dsh-museav-assets@0.1.0`（06:04 发出）**已于 09:29 撤回**（unpublish）——
+  先发无 scope 再改 scope 是白折腾一轮，而且撤回的名字 24 小时后任何人都能抢。
+  教训已写进 `../README.md` 的命名规则节。
   四处身份同步改：`package.json` / `export const name` / client 的 `ModuleLoader.id` /
   `cordis.patch.yml`；路由前缀 `/api/dsh-museav-assets` 保持不变（它与包名无关）。
 

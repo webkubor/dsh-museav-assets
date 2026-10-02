@@ -52,7 +52,8 @@ ctx.slots.register({
 ## 装
 
 > **包名 `@dsh-plugins/dsh-museav-assets`**（与另外三个插件同一 scope）。
-> `dsh-museav-assets`（无 scope）是最早 0.1.0 的历史名，已 deprecated，指向本名。
+> `dsh-museav-assets`（无 scope）是走错路时发过一版的临时名 —— **已于 2026-10-02 撤回**（unpublish），
+> 请只用本名。教训：新插件一开始就用 scope 名，别先发无 scope 再撤回（撤回的名字 24 小时后任何人都能抢）。
 
 桌面端在**应用内的插件管理**里装 —— 它从 npm 拉。命令行装不进 `desktop` profile
 （`profile "desktop" is managed exclusively by the Electron application`）。
