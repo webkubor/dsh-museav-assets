@@ -1,0 +1,38 @@
+name: Publish to npm
+
+# 推 v* tag 时自动发 npm。与本仓其它三个插件同一套：GitHub OIDC Trusted Publishing，
+# 不需要 npm token、不需要 OTP（2026-10-02 在 dsh-bloom-theme 上实测走通，带 Sigstore provenance）。
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Ensure OIDC-capable npm
+        run: npm install --global 'npm@^11.5.1'
+      - name: Verify release tag matches package version
+        run: |
+          node -e 'const expected = `v${require("./package.json").version}`; if (process.env.GITHUB_REF_NAME !== expected) throw new Error(`Tag mismatch: expected ${expected}, got ${process.env.GITHUB_REF_NAME}`)'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Test
+        run: npm test
+      - name: Verify package contents
+        run: npm pack --dry-run
+      - name: Publish with npm Trusted Publishing
+        run: npm publish --access public

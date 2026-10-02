@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: node --check lib/client.js && node --check lib/index.js && node --check lib/museav.js
+      # 零运行时依赖：测试用 stub 可执行文件顶替 museav CLI，全程不联网、不碰真账号
+      - run: npm test
+      # 版本真源：浏览器端拿不到 package.json，client.js 是手写无构建的，
+      # 这里只查它没被误改成带版本号的形态
+      - name: 打包内容自检
+        run: npm pack --dry-run
