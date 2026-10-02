@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1
+
+- 发布到 npm（0.1.0 是首个版本，本次只补文档与版本号）
+- README 中英：删掉「还没发 npm，所以桌面端装不上」的过渡说明，改成已发布状态 +
+  桌面端在应用内插件管理里装（CLI 装不进 app 独占托管的 `desktop` profile）
+- 加 `.github/workflows/publish.yml`：push `v*` tag → GitHub OIDC Trusted Publishing
+  直发 npm（不需要 npm token/OTP）；加 `ci.yml`：语法检查 + 43 个测试 + 打包自检
+
 ## 0.1.0
 
 首个版本。

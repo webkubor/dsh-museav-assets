@@ -30,13 +30,9 @@ session shell: `dsh-user-mirror`'s Memory tab does the same.
 
 ## Install
 
-> ⚠️ **Status (2026-10-02): not published to npm yet, so it cannot be installed on the desktop app.**
-> The host moved from the web UI (3080) to the **desktop app** (19387, profile `desktop`), and the
-> desktop profile is owned exclusively by the app — the CLI refuses plugin operations on it
-> (`profile "desktop" is managed exclusively by the Electron application`), while the app's plugin
-> manager installs from npm. This package is not published yet, so there is currently no install path.
-> The publish pipeline is already proven in the sibling plugins (`.github/workflows/publish.yml` +
-> `push: tags: ['v*']` + GitHub OIDC).
+> **Published**: `dsh-museav-assets@0.1.1` on npm. On the desktop app, install it from the app's
+> **plugin manager** (it pulls from npm) — the CLI cannot write to the `desktop` profile
+> (`profile "desktop" is managed exclusively by the Electron application`).
 
 Self-managed profile (one the CLI can write to, e.g. `desktop-local` for local dev):
 

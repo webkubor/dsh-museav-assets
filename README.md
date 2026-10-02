@@ -28,12 +28,8 @@ ctx.slots.register({
 
 ## 装
 
-> ⚠️ **2026-10-02 现状：还没发 npm，所以桌面端装不上。**
-> 宿主已从 web（3080）迁到**桌面端 app**（19387，profile `desktop`），而桌面 profile 由 app 独占托管 ——
-> CLI 对它做任何插件操作都会被拒（`profile "desktop" is managed exclusively by the Electron application`），
-> app 的插件管理器又是从 npm 装的。**这个包还没发布**，因此目前没有可用的安装路径。
-> 发布链路已经通了（照本目录其它插件：`.github/workflows/publish.yml` + `push: tags: ['v*']` + GitHub OIDC），
-> 发一次就能在 app 的插件管理里装上。
+> **已发布**：`dsh-museav-assets@0.1.1`（npm）。桌面端在**应用内的插件管理**里装 —— 它从 npm 拉。
+> 命令行装不进 `desktop` profile（`profile "desktop" is managed exclusively by the Electron application`）。
 
 自建 profile（CLI 能管的，例如本地开发用的 `desktop-local`）：
 
