@@ -30,14 +30,17 @@ session shell: `dsh-user-mirror`'s Memory tab does the same.
 
 ## Install
 
-> **Published**: `dsh-museav-assets@0.1.1` on npm. On the desktop app, install it from the app's
-> **plugin manager** (it pulls from npm) — the CLI cannot write to the `desktop` profile
-> (`profile "desktop" is managed exclusively by the Electron application`).
+> **Package name: `@dsh-plugins/dsh-museav-assets`** (same scope as the three sibling plugins).
+> The unscoped `dsh-museav-assets` was the original 0.1.0 name; it is deprecated and points here.
+
+On the desktop app, install it from the app's **plugin manager** (it pulls from npm) — the CLI
+cannot write to the `desktop` profile
+(`profile "desktop" is managed exclusively by the Electron application`).
 
 Self-managed profile (one the CLI can write to, e.g. `desktop-local` for local dev):
 
 ```sh
-npm run deploy   # rsync into ~/.dsh/profiles/desktop-local/node_modules/dsh-museav-assets/
+npm run deploy   # rsync into ~/.dsh/profiles/desktop-local/node_modules/@dsh-plugins/dsh-museav-assets/
 ```
 
 Then add the package to that profile (`~/.dsh/profiles/desktop-local/package.json`):

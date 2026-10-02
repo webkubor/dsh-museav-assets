@@ -28,20 +28,23 @@ ctx.slots.register({
 
 ## 装
 
-> **已发布**：`dsh-museav-assets@0.1.1`（npm）。桌面端在**应用内的插件管理**里装 —— 它从 npm 拉。
-> 命令行装不进 `desktop` profile（`profile "desktop" is managed exclusively by the Electron application`）。
+> **包名 `@dsh-plugins/dsh-museav-assets`**（与另外三个插件同一 scope）。
+> `dsh-museav-assets`（无 scope）是最早 0.1.0 的历史名，已 deprecated，指向本名。
+
+桌面端在**应用内的插件管理**里装 —— 它从 npm 拉。命令行装不进 `desktop` profile
+（`profile "desktop" is managed exclusively by the Electron application`）。
 
 自建 profile（CLI 能管的，例如本地开发用的 `desktop-local`）：
 
 ```sh
-npm run deploy   # rsync 进 ~/.dsh/profiles/desktop-local/node_modules/dsh-museav-assets/
+npm run deploy   # rsync 进 ~/.dsh/profiles/desktop-local/node_modules/@dsh-plugins/dsh-museav-assets/
 ```
 
 再把包名加进该 profile（`~/.dsh/profiles/desktop-local/package.json`）：
 
 ```jsonc
-"dependencies": { "dsh-museav-assets": "^0.1.0" },
-"dsh": { "profile": { "bundles": [ /* … */, "dsh-museav-assets" ] } }
+"dependencies": { "@dsh-plugins/dsh-museav-assets": "^0.1.1" },
+"dsh": { "profile": { "bundles": [ /* … */, "@dsh-plugins/dsh-museav-assets" ] } }
 ```
 
 拓扑级变更要重启：桌面端是**退出并重开 app**（`~/.dsh/restart.sh` 已作废，现在探测不到 3080 服务会直接以 1 退出）。

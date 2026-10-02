@@ -2,6 +2,11 @@
 
 ## 0.1.1
 
+- **包名迁到 `@dsh-plugins/dsh-museav-assets`**（与另外三个插件同一 scope）。
+  无 scope 的 `dsh-museav-assets` 是 0.1.0 的历史名，已 deprecated 指向本名。
+  四处身份同步改：`package.json` / `export const name` / client 的 `ModuleLoader.id` /
+  `cordis.patch.yml`；路由前缀 `/api/dsh-museav-assets` 保持不变（它与包名无关）。
+
 - 发布到 npm（0.1.0 是首个版本，本次只补文档与版本号）
 - README 中英：删掉「还没发 npm，所以桌面端装不上」的过渡说明，改成已发布状态 +
   桌面端在应用内插件管理里装（CLI 装不进 app 独占托管的 `desktop` profile）

@@ -6,5 +6,5 @@
 - insert:
     # 插件只暴露 4 条只读/轻写路由，全部 fail-open：CLI 没装、没登录、出错都回
     # {ok:false,error}，不影响 boot graph。
-    - id: dsh-museav-assets
-      name: 'dsh-museav-assets'
+    - id: @dsh-plugins/dsh-museav-assets
+      name: '@dsh-plugins/dsh-museav-assets'

@@ -2,7 +2,7 @@
  * dsh-museav-assets TypeScript Definitions
  */
 
-export const name: 'dsh-museav-assets'
+export const name: '@dsh-plugins/dsh-museav-assets'
 export const inject: string[]
 
 /** 一个工作区（项目）。id 是真值，name 来自 stderr 表格，解析不到就退回 id 前 8 位。 */
