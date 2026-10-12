@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.4...v0.1.5) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** blocked 不再一读到就判死 ([3af2384](https://github.com/webkubor/dsh-museav-assets/commit/3af23842cf14862d323e62839c16be0c0af42792))
+* **release:** 删掉 checks.listForRef 那层判据，只认 mergeable_state ([64bd6f5](https://github.com/webkubor/dsh-museav-assets/commit/64bd6f5399664b6ad1d5e93825450056fd8d1011))
+
 ## [0.1.4](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.3...v0.1.4) (2026-10-12)
 
 
