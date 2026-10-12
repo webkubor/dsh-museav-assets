@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.3...v0.1.4) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 以 mergeable_state 为门，不再等所有 check 跑完 ([eae2205](https://github.com/webkubor/dsh-museav-assets/commit/eae2205bf640e857f7215ca63aa1d45933e4d968))
+
 ## [0.1.3](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.2...v0.1.3) (2026-10-12)
 
 
