@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.3](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.2...v0.1.3) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** auto-merge 挂不上时兜底直接合并 ([18446e2](https://github.com/webkubor/dsh-museav-assets/commit/18446e27dd4a231910717a4a63c6a3d5af555e36))
+* **release:** mergeable_state 是异步的，unknown 要等而不是放弃 ([2989941](https://github.com/webkubor/dsh-museav-assets/commit/2989941c7eeee1fd15bb030e4ffa756d24e90718))
+* **release:** 等 check 跑完再挂 auto-merge ([45eb121](https://github.com/webkubor/dsh-museav-assets/commit/45eb12129568ebee6dfed048d450b87f7fb93429))
+
+
+### 🛠️ CI / Build
+
+* **release:** 接上 release-please，发版从此零人工 ([4e5d335](https://github.com/webkubor/dsh-museav-assets/commit/4e5d335ce20ed0134b55d903421a871a2673c7ef))
+
 ## 0.1.2
 
 - **修 0.1.1 装不上：`cordis.patch.yml` 的 `id` 缺引号。** 包名迁到 `@dsh-plugins`
