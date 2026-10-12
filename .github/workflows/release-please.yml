@@ -106,15 +106,59 @@ jobs:
               core.warning(`#${pr.number} 等 check 超过 15 分钟，本轮不挂 auto-merge`)
               return false
             }
+            /** 没通过的 check 名（NEUTRAL/SKIPPED 视为通过）。 */
+            async function failingChecks(pr) {
+              const { data } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha,
+                per_page: 100
+              })
+              return data.check_runs
+                .filter((r) => !['success', 'neutral', 'skipped'].includes(r.conclusion))
+                .map((r) => `${r.name}:${r.conclusion}`)
+            }
             for (const pr of releasePrs) {
               core.info(`对 #${pr.number} 启用 auto-merge: ${pr.title}`)
               if (!(await waitForChecks(pr))) continue
+
+              const failed = await failingChecks(pr)
+              if (failed.length > 0) {
+                core.warning(`#${pr.number} 有 check 没通过（${failed.join(', ')}），不自动合并`)
+                continue
+              }
+
               try {
                 await github.graphql(mutation, { prId: pr.node_id })
-                core.info(`#${pr.number} 已挂上 auto-merge`)
+                core.info(`#${pr.number} 已挂上 auto-merge，交给 GitHub 合`)
+                continue
               } catch (err) {
-                // 仓库没开 allow_auto_merge 时会报错。报出来但不失败整个 job ——
-                // 「没挂上自动合并」不该让 release-please 的动作看起来失败。
-                core.warning(`#${pr.number} 启用 auto-merge 失败: ${err.message}`)
+                // enablePullRequestAutoMerge 的接受区间很窄：PR 处于 unstable 时它说
+                // "is in unstable status"，等 check 全绿变成 clean 了它又说
+                // "is in clean status"。实测只有 BLOCKED（有人工审查门未过）时才收。
+                // 也就是说这个接口的可用性取决于调用时机，不是配置对不对。
+                core.info(`#${pr.number} 挂原生 auto-merge 未成功（${err.message}），改走直接合并`)
               }
+
+              // 兜底：状态干净就自己合。
+              // 这不是绕过门 —— PR 照走、check 照等、branch protection 照判；
+              // 只是不再依赖上面那个时机敏感的接口。
+              const { data: fresh } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              })
+              if (fresh.mergeable_state !== 'clean') {
+                core.warning(
+                  `#${pr.number} 状态是 ${fresh.mergeable_state}，不自动合并 —— 需要人看一眼`
+                )
+                continue
+              }
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'squash'
+              })
+              core.info(`#${pr.number} 已自动合并`)
             }
