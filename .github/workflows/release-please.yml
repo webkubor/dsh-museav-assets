@@ -100,11 +100,14 @@ jobs:
               // 未解决对话」全算进去了，而且是 GitHub 自己算的，不会有上面两种偏差。
               //
               // 状态语义：
-              //   unknown  还没算出来 → 等
-              //   unstable 有 check 在跑或没过 → 等
-              //   blocked  撞到真门（缺 review / 未解决对话）→ 停下来叫人
-              //   dirty    有冲突，自己修不好 → 停下来叫人
               //   clean     全绿 → 合
+              //   unknown   还没算出来 → 等
+              //   unstable  有 check 在跑 → 等
+              //   dirty     有冲突，自己修不好 → 立刻叫人
+              //   blocked   **不立刻判死**：实测 bloom #47 在 rebuild workflow 推完
+              //             commit 后的那一瞬是 blocked，几分钟后就变成 CLEAN 了。
+              //             「撞到真门」和「状态还没稳定」在这里长得一样，
+              //             只有等下去才分得开。所以只 dirty 短路。
               let state = 'unknown'
               const deadline = Date.now() + 20 * 60 * 1000
               while (Date.now() < deadline) {
@@ -114,7 +117,7 @@ jobs:
                   pull_number: pr.number
                 })
                 state = res.data.mergeable_state
-                if (state === 'clean' || state === 'blocked' || state === 'dirty') break
+                if (state === 'clean' || state === 'dirty') break
                 core.info(`#${pr.number} 状态 ${state}，等 20s 重读`)
                 await new Promise((resolve) => setTimeout(resolve, 20000))
               }
