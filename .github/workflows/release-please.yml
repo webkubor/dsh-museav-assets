@@ -1,0 +1,97 @@
+name: Release Please
+
+# 自动维护 version / CHANGELOG / tag / GitHub Release。
+# 提交走 Conventional Commits（feat:/fix:/docs:/ci:…）即可触发：
+# - 每个合并到 main 的 commit 会被收集到"待发布"清单
+# - 它每周自动开（或更新）一个 Release PR
+# - PR 合并后：自动打 tag、创建 GitHub Release，然后触发 publish.yml 发 npm
+# 想跳版本号或回滚：close 这个 PR 并评论 /autorelease:skip 或 /autorelease:major/minor。
+# 完整协议见 https://github.com/googleapis/release-please/blob/main/docs/cli.md
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          # 用 personal PAT（cs vault: secret://github/personal-pat，仓库 secret 名 PR_PAT），
+          # 而不是默认 GITHUB_TOKEN —— 后者要仓库额外勾
+          # "Allow GitHub Actions to create and approve pull requests" 才开得了 PR，
+          # 少这一步整条链路就不动。
+          token: ${{ secrets.PR_PAT }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: false
+
+  # 给 release-please 开出来的 PR 自动挂 auto-merge。
+  #
+  # ⚠️ 为什么需要这个 job：release-please 只负责「开 PR」，合并那一步设计上要人点。
+  #   仓库的 allow_auto_merge 已开，这里在 PR 出来后主动去启用，条件满足即自动合并 ——
+  #   这一步做完，日常发版零人工。仍然会等 branch protection 要求的 check 通过才合：
+  #   「合并不需要人」不等于「合并不需要门」。
+  #
+  # 靠 head ref 前缀筛（release-please--），不硬编码完整分支名 —— 组件名、
+  # include-component-in-tag 都会影响它生成的分支名，写死等于埋雷。
+  # 找不到 PR 就安静退出：这个 workflow 在「没有待发布内容」时也会跑。
+  auto-merge:
+    needs: release-please
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: 对 release PR 启用 auto-merge
+        uses: actions/github-script@v7
+        with:
+          # ⚠️ 必须用 PR_PAT，不能用默认 GITHUB_TOKEN。
+          #   enablePullRequestAutoMerge 是「以用户身份」执行的 GraphQL mutation，
+          #   GitHub App token 调它会拿到 "Resource not accessible by integration" ——
+          #   workflow 报 success、日志里一条 warning，PR 上 autoMergeRequest 却是 null。
+          github-token: ${{ secrets.PR_PAT }}
+          script: |
+            // ⚠️ pulls.list 的 head 参数是**精确匹配**（`user:ref`），不是前缀匹配。
+            //   写成 `owner:release-please--` 匹配不到
+            //   `release-please--branches--main--components--<name>`，
+            //   列表会返回空 —— 实测踩过一次，日志安静地打「没有待处理的 release PR」。
+            //   所以这里拉全量开放 PR，在 JS 里按 ref 前缀筛。
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            })
+            const releasePrs = prs.filter((pr) => pr.head.ref.startsWith('release-please--'))
+            if (releasePrs.length === 0) {
+              core.info(`开放 PR ${prs.length} 个，其中 release PR 0 个 —— 本次推送没有可发布内容`)
+              return
+            }
+            // ⚠️ 启用 auto-merge **只有 GraphQL 接口**，REST 里没有对应端点 ——
+            //   写 github.rest.pulls.enablePullRequestAutoMerge 会得到
+            //   "is not a function"。而且它吃的是 PR 的 node_id，不是 PR 号。
+            const mutation = `mutation ($prId: ID!) {
+              enablePullRequestAutoMerge(input: { pullRequestId: $prId, mergeMethod: SQUASH }) {
+                clientMutationId
+              }
+            }`
+            for (const pr of releasePrs) {
+              core.info(`对 #${pr.number} 启用 auto-merge: ${pr.title}`)
+              try {
+                await github.graphql(mutation, { prId: pr.node_id })
+                core.info(`#${pr.number} 已挂上 auto-merge`)
+              } catch (err) {
+                // 仓库没开 allow_auto_merge 时会报错。报出来但不失败整个 job ——
+                // 「没挂上自动合并」不该让 release-please 的动作看起来失败。
+                core.warning(`#${pr.number} 启用 auto-merge 失败: ${err.message}`)
+              }
+            }
