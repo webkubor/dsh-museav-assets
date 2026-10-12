@@ -143,14 +143,24 @@ jobs:
               // 兜底：状态干净就自己合。
               // 这不是绕过门 —— PR 照走、check 照等、branch protection 照判；
               // 只是不再依赖上面那个时机敏感的接口。
-              const { data: fresh } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number
-              })
-              if (fresh.mergeable_state !== 'clean') {
+              //
+              // ⚠️ mergeable_state 是**异步算的**：刚推完那一刻经常是 unknown，
+              //   直接读就判「不能合」而放弃 —— 实测踩过一次。所以 unknown 要等。
+              let fresh = null
+              for (let i = 0; i < 10; i++) {
+                const res = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number
+                })
+                fresh = res.data
+                if (fresh.mergeable_state !== 'unknown') break
+                core.info(`#${pr.number} mergeable_state 还是 unknown，等 10s 重读`)
+                await new Promise((resolve) => setTimeout(resolve, 10000))
+              }
+              if (!fresh || fresh.mergeable_state !== 'clean') {
                 core.warning(
-                  `#${pr.number} 状态是 ${fresh.mergeable_state}，不自动合并 —— 需要人看一眼`
+                  `#${pr.number} 状态是 ${fresh ? fresh.mergeable_state : '读不到'}，不自动合并 —— 需要人看一眼`
                 )
                 continue
               }
