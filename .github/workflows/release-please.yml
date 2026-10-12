@@ -87,10 +87,15 @@ jobs:
             // ⚠️ **必须等 check 跑完再挂**。GitHub 拒绝对「unstable」的 PR 启用
             //   auto-merge（返回 "Pull request is in unstable status"）。
             //   而 release-please 一开 PR，这个 job 就立刻启动 —— CI 那时必然还在跑。
-            //   所以不轮询就挂，等于四个仓库里三个必然静默失败。
+            //
+            //   但**不是等所有 check**：仓库里还挂着第三方审查 agent（Cursor 的
+            //   Security Reviewer / Approval Router），它们能挂 in_progress 好几分钟，
+            //   却不属于 branch protection 要求的检查 —— 等它们会把发版卡死
+            //   （实测 bloom #47 在这里空等了 15 分钟）。
+            //   所以只做「短暂等待」，真正的把关交给下面的 mergeable_state。
             const PENDING = new Set(['queued', 'in_progress', 'pending', 'waiting'])
             async function waitForChecks(pr) {
-              const deadline = Date.now() + 15 * 60 * 1000
+              const deadline = Date.now() + 5 * 60 * 1000
               while (Date.now() < deadline) {
                 const { data } = await github.rest.checks.listForRef({
                   owner: context.repo.owner,
@@ -103,7 +108,7 @@ jobs:
                 core.info(`#${pr.number} 还有 ${running.length} 个 check 在跑（${running.map((r) => r.name).join(', ')}），等 20s`)
                 await new Promise((resolve) => setTimeout(resolve, 20000))
               }
-              core.warning(`#${pr.number} 等 check 超过 15 分钟，本轮不挂 auto-merge`)
+              core.info(`#${pr.number} 仍有 check 在跑，继续往下走 —— 由 mergeable_state 判门`)
               return false
             }
             /** 没通过的 check 名（NEUTRAL/SKIPPED 视为通过）。 */
@@ -118,9 +123,29 @@ jobs:
                 .filter((r) => !['success', 'neutral', 'skipped'].includes(r.conclusion))
                 .map((r) => `${r.name}:${r.conclusion}`)
             }
+            /**
+             * 轮询 mergeable_state 直到它脱离 unknown。
+             * 它是异步算的，刚推完那一刻读出来是 unknown；直接拿 unknown 当「不能合」
+             * 就放弃，等于把「还没算出来」和「确实不能合」混为一谈。
+             */
+            async function readState(pr, tries) {
+              let fresh = null
+              for (let i = 0; i < tries; i++) {
+                const res = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number
+                })
+                fresh = res.data
+                if (fresh.mergeable_state !== 'unknown') return fresh
+                core.info(`#${pr.number} mergeable_state 还是 unknown，等 10s 重读`)
+                await new Promise((resolve) => setTimeout(resolve, 10000))
+              }
+              return fresh
+            }
             for (const pr of releasePrs) {
               core.info(`对 #${pr.number} 启用 auto-merge: ${pr.title}`)
-              if (!(await waitForChecks(pr))) continue
+              await waitForChecks(pr)
 
               const failed = await failingChecks(pr)
               if (failed.length > 0) {
@@ -128,35 +153,22 @@ jobs:
                 continue
               }
 
-              try {
-                await github.graphql(mutation, { prId: pr.node_id })
-                core.info(`#${pr.number} 已挂上 auto-merge，交给 GitHub 合`)
-                continue
-              } catch (err) {
-                // enablePullRequestAutoMerge 的接受区间很窄：PR 处于 unstable 时它说
-                // "is in unstable status"，等 check 全绿变成 clean 了它又说
-                // "is in clean status"。实测只有 BLOCKED（有人工审查门未过）时才收。
-                // 也就是说这个接口的可用性取决于调用时机，不是配置对不对。
-                core.info(`#${pr.number} 挂原生 auto-merge 未成功（${err.message}），改走直接合并`)
+              // **mergeable_state === 'clean' 才是本 workflow 真正的门**：
+              // 它已经把 branch protection 的要求（必需 check、必需 review、
+              // 未解决对话）全算进去了。所以先试原生 auto-merge，不成就以它为准。
+              let fresh = await readState(pr, 5)
+              if (!fresh || fresh.mergeable_state === 'clean') {
+                try {
+                  await github.graphql(mutation, { prId: pr.node_id })
+                  core.info(`#${pr.number} 已挂上 auto-merge，交给 GitHub 合`)
+                  continue
+                } catch (err) {
+                  core.info(`#${pr.number} 挂原生 auto-merge 未成功（${err.message}），改走直接合并`)
+                }
               }
 
-              // 兜底：状态干净就自己合。
-              // 这不是绕过门 —— PR 照走、check 照等、branch protection 照判；
-              // 只是不再依赖上面那个时机敏感的接口。
-              //
-              // ⚠️ mergeable_state 是**异步算的**：刚推完那一刻经常是 unknown，
-              //   直接读就判「不能合」而放弃 —— 实测踩过一次。所以 unknown 要等。
-              let fresh = null
-              for (let i = 0; i < 10; i++) {
-                const res = await github.rest.pulls.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number
-                })
-                fresh = res.data
-                if (fresh.mergeable_state !== 'unknown') break
-                core.info(`#${pr.number} mergeable_state 还是 unknown，等 10s 重读`)
-                await new Promise((resolve) => setTimeout(resolve, 10000))
+              if (!fresh || fresh.mergeable_state === 'unknown') {
+                fresh = await readState(pr, 10)
               }
               if (!fresh || fresh.mergeable_state !== 'clean') {
                 core.warning(
