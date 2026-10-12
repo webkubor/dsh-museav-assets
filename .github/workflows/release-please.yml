@@ -84,8 +84,31 @@ jobs:
                 clientMutationId
               }
             }`
+            // ⚠️ **必须等 check 跑完再挂**。GitHub 拒绝对「unstable」的 PR 启用
+            //   auto-merge（返回 "Pull request is in unstable status"）。
+            //   而 release-please 一开 PR，这个 job 就立刻启动 —— CI 那时必然还在跑。
+            //   所以不轮询就挂，等于四个仓库里三个必然静默失败。
+            const PENDING = new Set(['queued', 'in_progress', 'pending', 'waiting'])
+            async function waitForChecks(pr) {
+              const deadline = Date.now() + 15 * 60 * 1000
+              while (Date.now() < deadline) {
+                const { data } = await github.rest.checks.listForRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: pr.head.sha,
+                  per_page: 100
+                })
+                const running = data.check_runs.filter((r) => PENDING.has(r.status))
+                if (running.length === 0) return true
+                core.info(`#${pr.number} 还有 ${running.length} 个 check 在跑（${running.map((r) => r.name).join(', ')}），等 20s`)
+                await new Promise((resolve) => setTimeout(resolve, 20000))
+              }
+              core.warning(`#${pr.number} 等 check 超过 15 分钟，本轮不挂 auto-merge`)
+              return false
+            }
             for (const pr of releasePrs) {
               core.info(`对 #${pr.number} 启用 auto-merge: ${pr.title}`)
+              if (!(await waitForChecks(pr))) continue
               try {
                 await github.graphql(mutation, { prId: pr.node_id })
                 core.info(`#${pr.number} 已挂上 auto-merge`)
