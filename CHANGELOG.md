@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.5...v0.1.6) (2026-10-18)
+
+
+### 🐛 Bug Fixes
+
+* **tools:** 将 mcp__museav__ 工具名前缀对齐到 mcp__cs__ ([0aebfa3](https://github.com/webkubor/dsh-museav-assets/commit/0aebfa326aaefc5068a5506963786af63da9d867))
+
 ## [0.1.5](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.4...v0.1.5) (2026-10-12)
 
 
