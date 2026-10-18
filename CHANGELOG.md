@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.6...v0.1.7) (2026-10-18)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 自动解除机器人 review thread 阻塞并添加定时发版巡检 ([8f653b0](https://github.com/webkubor/dsh-museav-assets/commit/8f653b05bd5002518eb202d9e82fd47e2a9dc790))
+
 ## [0.1.6](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.5...v0.1.6) (2026-10-18)
 
 
