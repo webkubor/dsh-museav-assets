@@ -5,7 +5,7 @@ and see recent generations. Click an asset to copy its direct URL, ready to use 
 ref image (`museav gen --ref <url>`).
 
 Built on the local **museav CLI**. It deliberately does not re-implement generation
-or upload — those stay with the `mcp__museav__*` tools already bridged into DSH. This
+or upload — those stay with the `mcp__cs__*` tools already bridged into DSH. This
 plugin only adds the missing view: *which projects do I have, and what is in each one*.
 
 ## Where the tab goes
