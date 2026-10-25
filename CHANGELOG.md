@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.7...v0.1.8) (2026-10-25)
+
+
+### 📝 Documentation
+
+* add AGENTS.md and llms.txt ([513cfa2](https://github.com/webkubor/dsh-museav-assets/commit/513cfa2ebb2578dd2f34592ff25f4e4d4866c681))
+
 ## [0.1.7](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.6...v0.1.7) (2026-10-18)
 
 
