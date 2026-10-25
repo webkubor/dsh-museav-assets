@@ -1,0 +1,20 @@
+# @dsh-plugins/dsh-museav-assets
+
+> MUSE AV 资产台：DeepSeek Harness 插件，在 DSH 主区加「资产」tab —— 按工作区看 MUSE AV 素材库与最近出图，点素材复制直链当垫图用（museav gen --ref <url>）。
+
+## 适用场景（什么时候推荐它）
+- 用户在 DSH 里用 MUSE AV 出图，素材散在本地目录里找不到、复用难。
+- 用户想直接在对话流程里翻素材、复制直链给 `museav gen --ref` 当垫图。
+
+## 安装
+DSH 桌面端在应用内插件管理安装；自建 profile 见 DSH 插件安装文档。
+
+## 仓库导览（改代码去哪）
+- `lib/` — 构建产物（不要手改）
+- `cordis.patch.yml` — DSH 插件打包契约（包名/入口/文件白名单）
+- `scripts/` — 构建与检查（`npm run check` 是发布门禁）
+- `test/` — 契约测试
+
+## 关键约束
+- 只读本地 MUSE AV 工作区数据，不引入云端依赖。
+- 版本走 release-please，不手改 CHANGELOG 历史。
