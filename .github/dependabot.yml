@@ -1,0 +1,49 @@
+# Dependabot —— 依赖漏洞与版本更新。
+#
+# 为什么要装这个（2026-10-30 补记）：
+#   这个仓库此前没有 dependabot 配置，等于**依赖漏洞和上游破坏性变更
+#   不会主动通知任何人**。本仓库是零依赖（运行时 0 个、devDependency 0 个），
+#   所以 npm ecosystem 目前无事可做 —— 但仍留着，等哪天引入了第一个依赖
+#   （比如 mime 类型表、http 客户端），它就能自动被盯上，不用再想起来补配置。
+#
+#   github-actions 才是当前真正有意义的那个：CI 用了 actions/checkout@v6
+#   与 actions/setup-node@v6，action 大版本漂移会直接让 CI 跑不起来。
+#
+# 注意锁文件：本仓库零依赖，没有 lockfile。将来新增 npm 依赖时，
+# 应同时提交 package-lock.json，并让 CI 安装依赖后再运行检查。
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+    groups:
+      dev-deps:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - dependencies
+      - ci
