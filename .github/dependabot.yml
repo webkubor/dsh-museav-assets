@@ -9,8 +9,8 @@
 #   github-actions 才是当前真正有意义的那个：CI 用了 actions/checkout@v6
 #   与 actions/setup-node@v6，action 大版本漂移会直接让 CI 跑不起来。
 #
-# 注意锁文件：本仓库零依赖，没有 lockfile。将来加了依赖要一并提交
-# package-lock.json（CI 会跑 npm ci，没有 lockfile 会直接失败）。
+# 注意锁文件：本仓库零依赖，没有 lockfile。将来新增 npm 依赖时，
+# 应同时提交 package-lock.json，并让 CI 安装依赖后再运行检查。
 
 version: 2
 updates:
