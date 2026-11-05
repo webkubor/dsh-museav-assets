@@ -16,7 +16,9 @@
     },
     "./package.json": {
       "default": "./package.json"
-    }
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
   },
   "dsh": {
     "bundle": {
@@ -63,6 +65,8 @@
     "README.en.md",
     "cordis.patch.yml",
     "lib",
-    "types"
+    "types",
+    "locale/*.json",
+    "icon.svg"
   ]
 }
