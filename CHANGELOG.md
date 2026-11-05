@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.8...v0.2.0) (2026-11-05)
+
+
+### ✨ Features
+
+* **meta:** 补齐插件管理器标题、简介与图标；样式随插件停用移除 ([6e375cb](https://github.com/webkubor/dsh-museav-assets/commit/6e375cbade47f888602cd732206f6f74827c58ac))
+
 ## [0.1.8](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.7...v0.1.8) (2026-10-25)
 
 
