@@ -1,32 +1,8 @@
 # dsh-museav-assets
 
-An **Assets** tab for DeepSeek Harness: browse MUSE AV assets by project (workspace)
-and see recent generations. Click an asset to copy its direct URL, ready to use as a
-ref image (`museav gen --ref <url>`).
+A **Museav** workspace for DeepSeek Harness: browse featured inspiration and available models, generate images, and manage project assets and works in one place.
 
-Built on the local **museav CLI**. It deliberately does not re-implement generation
-or upload — those stay with the `mcp__cs__*` tools already bridged into DSH. This
-plugin only adds the missing view: *which projects do I have, and what is in each one*.
-
-## Where the tab goes
-
-The sixth tab in the main area, registered on `conversation.view` with **order 40**,
-after Chat (0) / Trajectory (10) / Memory (20) / Context / Computer Environment (30).
-
-```js
-ctx.slots.register({
-  name: 'conversation.view',
-  id: 'museav-assets',
-  order: 40,
-  label: () => t('title'),   // "Assets"
-}, AssetsView)
-```
-
-Main area rather than the right panel: assets are a one-screen job (project chips +
-thumbnail grid + generation feed); the right panel is a narrow pane meant for a single
-selected object, and its tab semantics are "the thing you currently have open" — assets
-are global and belong to no session. There is precedent for a global view living in the
-session shell: `dsh-user-mirror`'s Memory tab does the same.
+Open **Museav** from the global left sidebar. The previous session-specific Assets tab is no longer registered. Existing projects and generation records remain available through the local **museav CLI**. Featured inspiration comes from MUSE AV's public API; the platform automatically selects the model for each generation.
 
 ## Install
 

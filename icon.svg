@@ -1,13 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">一念成像标志</title>
+  <desc id="desc">一枚珊瑚橙色的旋转画面，以一道留白切出「一」，象征一个念头进入画面。</desc>
   <defs>
-    <linearGradient id="museav-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6d5a8c"/>
-      <stop offset="1" stop-color="#3f4f7a"/>
-    </linearGradient>
+    <mask id="oneCut" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <rect width="128" height="128" fill="#000"/>
+      <path d="M64 18L110 64L64 110L18 64L64 18Z" fill="#fff"/>
+      <path d="M22 59H85V69H22V59Z" fill="#000"/>
+    </mask>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#museav-bg)"/>
-  <rect x="19" y="13" width="32" height="26" rx="4" fill="#fff" opacity=".35"/>
-  <rect x="13" y="21" width="34" height="30" rx="4" fill="#fff"/>
-  <circle cx="22.5" cy="30" r="3.5" fill="#f0b26b"/>
-  <path d="M16 47l9.5-10.5 6 6.5 4.5-4.5 8 8.5z" fill="#6d5a8c"/>
+  <rect width="128" height="128" fill="#FF8150" mask="url(#oneCut)"/>
 </svg>
