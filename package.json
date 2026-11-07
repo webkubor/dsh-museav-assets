@@ -1,7 +1,7 @@
 {
   "name": "@dsh-plugins/dsh-museav-assets",
   "version": "0.2.0",
-  "description": "MUSE AV 资产台：在 DSH 主区加一个「资产」tab，按项目（工作区）看素材库与最近出图，点素材复制直链当垫图用。基于本机 museav CLI，不碰任何密钥。",
+  "description": "MUSE AV 创作工作台：从 DSH 侧栏浏览灵感与可用模型、生成作品并管理项目素材。",
   "type": "module",
   "main": "lib/index.js",
   "types": "./types/index.d.ts",
@@ -33,6 +33,7 @@
     }
   },
   "scripts": {
+    "build:client": "node scripts/build-client.mjs",
     "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs && node scripts/version-sync-gate.mjs",
     "check": "for f in lib/*.js; do node --check \"$f\" || exit 1; done",
     "test": "node --test test/*.test.mjs",

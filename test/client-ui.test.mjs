@@ -63,6 +63,7 @@ function createReact (hookValues) {
     },
     useState: (initial) => [next(initial), () => {}],
     useRef: (initial) => ({ current: next(initial) }),
+    useId: () => 'test-id',
     useEffect: () => {},
     useCallback: (fn) => fn,
   }
@@ -107,12 +108,12 @@ function render ({ state = READY, form = EMPTY_FORM, zoom = null, tplForm = null
   exports.apply({
     effect: (fn) => fn(),
     locale: { register: () => {}, bind: () => T },
-    slots: { inject: (_, fn) => fn(), register: (_, comp) => { Component = comp } },
+    slots: { inject: (_, fn) => fn(), register: (cfg, comp) => { if (cfg.name === 'main') Component = comp } },
   })
   return Component({ t: T })
 }
 
-test('注册契约：挂到 conversation.view，id 唯一且 order 排在电脑环境(30) 之后', () => {
+test('注册契约：全局侧栏入口与主区页面使用同一标识', () => {
   assert.ok(pluginDefinition, 'client 脚本必须执行 __ModuleLoader__.load')
   assert.equal(pluginDefinition.id, PKG_NAME)
 
@@ -124,13 +125,14 @@ test('注册契约：挂到 conversation.view，id 唯一且 order 排在电脑�
     slots: { inject: (_, fn) => fn(), register: (cfg, comp) => registered.push({ cfg, comp }) },
   })
 
-  assert.equal(registered.length, 1, '只注册一个面（资产 tab），不铺第二个入口')
-  const { cfg, comp } = registered[0]
-  assert.equal(cfg.name, 'conversation.view')
-  assert.equal(cfg.id, 'museav-assets')
-  assert.equal(cfg.order, 40)
-  assert.equal(cfg.label(), 'title')
-  assert.ok(typeof comp === 'function')
+  assert.equal(registered.length, 2)
+  const main = registered.find(({ cfg }) => cfg.name === 'main')
+  const nav = registered.find(({ cfg }) => cfg.name === 'sidebar.panellist')
+  assert.equal(main.cfg.key, 'museav-assets')
+  assert.equal(nav.cfg.id, main.cfg.key)
+  assert.equal(nav.cfg.label(), 'title')
+  assert.ok(typeof main.comp === 'function')
+  assert.ok(typeof nav.comp === 'function')
   assert.deepEqual(exports.inject.sort(), ['locale', 'slots'])
 })
 
@@ -159,12 +161,12 @@ test('出图台是这个 tab 的第一段：提示词框 + 比例 + 模板 + 出
   const ta = findAll(vdom, (n) => n.type === 'textarea')
   assert.ok(ta.length >= 1, '要有提示词输入框')
   assert.equal(ta[0].props.className, 'dma-prompt')
-  // 比例下拉：按「选项值里含 9:16」认 —— 模板下拉的文案里也带 3:4，只搜 3:4 会认错
-  const ratioSelect = findAll(vdom, (n) => n.type === 'select')
-    .find((n) => findAll(n, (x) => x.type === 'option').some((o) => o.props.value === '9:16'))
-  assert.ok(ratioSelect, '要有比例选择器')
-  assert.deepEqual(findAll(ratioSelect, (n) => n.type === 'option').map((o) => o.props.value),
+  // 比例是瓦片按钮（像 C 端出图台），不是下拉：按角色找，认「9:16」这个瓦片
+  const ratioTiles = findAll(vdom, (n) => /^dma-ratio( is-active)?$/.test(n.props?.className ?? ''))
+  assert.ok(ratioTiles.length >= 5, '要有比例瓦片')
+  assert.deepEqual(ratioTiles.slice(0, 5).map((n) => n.children[0]),
     ['3:4', '9:16', '1:1', '4:3', '16:9'])
+  assert.equal(ratioTiles[0].props['aria-checked'], true, '默认选中第一个比例')
   const gen = findAll(vdom, (n) => n.props?.className === 'dma-gen')
   assert.equal(gen.length, 1, '只有一个出图按钮')
   assert.equal(gen[0].props.disabled, true, '没提示词也没模板时，出图按钮必须是禁用的')

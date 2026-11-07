@@ -2,9 +2,8 @@
 
 ## 这是什么
 
-MUSE AV 资产台 —— DeepSeek Harness 插件（`@dsh-plugins/dsh-museav-assets`）：
-在 DSH 主区加一个「资产」tab，按项目（工作区）看 MUSE AV 的素材库与最近出图，
-点素材复制直链，直接当垫图用（`museav gen --ref <url>`）。
+Museav 工作台 —— DeepSeek Harness 插件（`@dsh-plugins/dsh-museav-assets`）：
+从全局侧栏打开独立主区，浏览公开灵感和可用模型，使用本机 CLI 出图并按项目管理素材和作品。
 
 ## 关键文件
 
@@ -23,6 +22,6 @@ npm run deploy    # 部署到本机 DSH profile
 
 ## 约定
 
-- 只读本地 MUSE AV 的工作区数据，不引入云端依赖。
+- 项目、素材、模型和生成能力通过本机 museav CLI；公开灵感库按 owner 要求只读访问 MUSE AV 官方公开接口，不转发账户凭据。不得把公开数据接口扩展为任意 URL 代理。
 - 版本与 CHANGELOG 走 release-please（见 `release-please-config.json`），不手改历史。
 - lib/ 是生成物：改动一律走源码 + 构建。

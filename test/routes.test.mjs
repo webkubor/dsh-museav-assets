@@ -27,6 +27,7 @@ if [ "$MUSEAV_STUB_FAIL" = "1" ]; then
 fi
 case "$1" in
   --version) echo "3.9.1"; exit 0 ;;
+  models) printf 'gpt-image-2\ngpt-image-2.5\n'; exit 0 ;;
   projects)
     case "$2" in
       create)
@@ -179,17 +180,68 @@ test('inject 覆盖代码里用到的每个 ctx.* —— 漏声明只会让插�
   assert.ok(!inject.includes('config'), "inject 里不该有 'config'：函数式插件读不到它，声明了只会 pending")
 })
 
-test('六条路由各注册一次，路径互不重复', async (t) => {
+test('路由各注册一次，路径互不重复', async (t) => {
   const { routes, restore } = await boot(stubBin)
   t.after(restore)
   assert.deepEqual([...routes.keys()].sort(), [
     '/api/dsh-museav-assets/assets',
+    '/api/dsh-museav-assets/discover',
     '/api/dsh-museav-assets/gen',
     '/api/dsh-museav-assets/health',
     '/api/dsh-museav-assets/jobs',
+    '/api/dsh-museav-assets/models',
     '/api/dsh-museav-assets/projects',
     '/api/dsh-museav-assets/templates',
   ])
+})
+
+test('灵感库只返回公开图片，不暴露受保护提示词', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  const originalFetch = globalThis.fetch
+  t.after(() => { globalThis.fetch = originalFetch; restore() })
+  globalThis.fetch = async () => ({ ok: true, json: async () => [
+    { id: 'one', cdn_url: 'https://example.com/a.jpg', media_type: 'image', prompt: 'secret', prompt_teaser: 'preview', author: { nickname: 'artist' } },
+    { id: 'two', cdn_url: 'http://example.com/x.jpg', media_type: 'image' },
+    { id: 'three', cdn_url: 'https://example.com/x.mp4', media_type: 'video' },
+  ] })
+  const res = await call('/api/dsh-museav-assets/discover')
+  assert.equal(res.body.ok, true)
+  assert.equal(res.body.works.length, 1)
+  assert.equal(res.body.works[0].teaser, 'preview')
+  assert.equal('prompt' in res.body.works[0], false)
+})
+
+test('灵感库上游失败时返回可恢复的空状态', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  const originalFetch = globalThis.fetch
+  t.after(() => { globalThis.fetch = originalFetch; restore() })
+  globalThis.fetch = async () => { throw new Error('network unavailable') }
+  const res = await call('/api/dsh-museav-assets/discover')
+  assert.equal(res.body.ok, false)
+  assert.deepEqual(res.body.works, [])
+  assert.ok(res.body.error)
+})
+
+test('GET /models 从 CLI 返回可用模型标识', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  const res = await call('/api/dsh-museav-assets/models')
+  assert.equal(res.body.ok, true)
+  assert.deepEqual(res.body.models, ['gpt-image-2', 'gpt-image-2.5'])
+})
+
+test('模型列表 CLI 失败时明确返回错误', async (t) => {
+  const { call, restore } = await boot(stubBin)
+  t.after(restore)
+  process.env.MUSEAV_STUB_FAIL = '1'
+  try {
+    const res = await call('/api/dsh-museav-assets/models')
+    assert.equal(res.body.ok, false)
+    assert.deepEqual(res.body.models, [])
+    assert.ok(res.body.error)
+  } finally {
+    delete process.env.MUSEAV_STUB_FAIL
+  }
 })
 
 test('GET /projects 返回合并后的项目与 5 个上限', async (t) => {
