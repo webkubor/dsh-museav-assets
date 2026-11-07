@@ -63,6 +63,7 @@ function createReact (hookValues) {
     },
     useState: (initial) => [next(initial), () => {}],
     useRef: (initial) => ({ current: next(initial) }),
+    useId: () => 'test-id',
     useEffect: () => {},
     useCallback: (fn) => fn,
   }

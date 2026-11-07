@@ -50,6 +50,7 @@ window.__ModuleLoader__.load({
         modelImage: '图像生成',
         discoverTitle: '灵感库',
         discoverNote: '来自 MUSE AV 精选作品',
+        discoverFeatured: '精选',
         discoverLoading: '正在加载灵感…',
         discoverFailed: '灵感暂时无法加载，请检查网络后重试。',
         discoverEmpty: '暂时没有精选作品',
@@ -58,7 +59,8 @@ window.__ModuleLoader__.load({
         assets: '素材库',
         jobs: '最近出图',
         newProject: '＋ 新建项目',
-        refresh: '🔄 刷新',
+        refresh: '刷新',
+        copyFailed: '复制失败，请手动复制链接。',
         creating: '创建中…',
         namePlaceholder: '项目名（≤20 字）',
         emptyProjects: '还没有项目。点右上角「新建项目」开一个。',
@@ -139,6 +141,7 @@ window.__ModuleLoader__.load({
         modelImage: 'Image generation',
         discoverTitle: 'Inspiration',
         discoverNote: 'Featured works from MUSE AV',
+        discoverFeatured: 'Featured',
         discoverLoading: 'Loading inspiration…',
         discoverFailed: 'Unable to load inspiration. Check your connection and try again.',
         discoverEmpty: 'No featured works yet',
@@ -151,7 +154,8 @@ window.__ModuleLoader__.load({
         keepOld: 'Showing the last data we got.',
         jumpTo: '"{name}" has {n} →',
         newProject: '＋ New project',
-        refresh: '🔄 Refresh',
+        refresh: 'Refresh',
+        copyFailed: 'Copy failed. Please copy the link manually.',
         creating: 'Creating…',
         namePlaceholder: 'Project name (≤20 chars)',
         emptyProjects: 'No project yet. Create one with the button above.',
@@ -221,40 +225,58 @@ window.__ModuleLoader__.load({
 
     const CSS = `
       .dsh-museav-view {
-        box-sizing: border-box; padding: 32px clamp(20px, 5vw, 64px) 96px;
+        /* C 端 App.vue 的品牌变量限定在工作台内部，不影响 DSH 全局主题。 */
+        --dsw-alias-bg-layer-1: #14110e;
+        --dsw-alias-bg-layer-2: #211a14;
+        --dsw-alias-bg-layer-3: #2a2119;
+        --dsw-alias-label-primary: #f2ece5;
+        --dsw-alias-label-secondary: #a89e93;
+        --dsw-alias-label-tertiary: #94897c;
+        --dsw-alias-border-l1: rgba(215,172,103,.22);
+        --dsw-alias-brand-primary: #ff8a50;
+        container-type: inline-size;
+        box-sizing: border-box; padding: 24px clamp(20px, 4vw, 56px) 96px;
         font-size: 14px; line-height: 1.6; height: 100%; overflow: auto;
-        color: var(--dsw-alias-label-primary, #222);
-        background: var(--dsw-alias-bg-base, transparent);
+        color: #f2ece5; background: #14110e; color-scheme: dark;
       }
       .dsh-museav-view > * { max-width: 1080px; margin-left: auto; margin-right: auto; }
 
+      .dma-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: rgba(0,0,0,.66); padding: 24px; }
+      .dma-confirm { width: min(440px, 100%); box-sizing: border-box; padding: 24px; border-radius: 16px; background: #2a2119; border: 1px solid rgba(215,172,103,.22); box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+      .dma-confirm p { margin: 0 0 20px; color: #f2ece5; overflow-wrap: anywhere; }
+      .dma-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
       .dma-head {
-        display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-        padding: 12px 14px; border-radius: 12px; margin-bottom: 14px;
-        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
-        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.06));
+        display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+        padding: 8px 0 24px; border-bottom: 1px solid var(--dsw-alias-border-l1);
+        margin-bottom: 24px;
       }
       .dma-head-eyebrow {
+        display: flex; align-items: center; gap: 12px;
+        font-family: 'Songti SC', 'Noto Serif SC', Georgia, serif;
         font-size: clamp(22px, 2.3vw, 30px); line-height: 1.2; font-weight: 700;
-        letter-spacing: -.02em; color: var(--dsw-alias-label-primary, #222);
+        letter-spacing: .04em; color: #f2ece5;
       }
       .dma-head-sub { font-size: 12px; color: var(--dsw-alias-label-secondary, #666); flex: 1; min-width: 180px; }
       .dma-count {
         font-size: 11px; color: var(--dsw-alias-label-tertiary, #999);
         font-variant-numeric: tabular-nums;
       }
-      .dma-count.is-full { color: var(--dsw-alias-state-error-primary, #d44); }
+      .dma-count.is-full { color: var(--dsw-alias-label-secondary, #a89e93); }
       .dma-btn {
         background: none; border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.12));
         color: var(--dsw-alias-label-secondary, #666); border-radius: 7px;
-        font-size: 11.5px; padding: 3px 9px; cursor: pointer; font-family: inherit;
+        font-size: 13px; padding: 8px 14px; cursor: pointer; font-family: inherit; transition: background .15s, border-color .15s;
         white-space: nowrap;
       }
       .dma-btn:hover:not(:disabled) { background: var(--dsw-alias-bg-layer-3, rgba(0,0,0,.05)); }
       .dma-btn:disabled { opacity: .45; cursor: default; }
       .dma-btn.is-primary {
-        border-color: var(--dsw-alias-brand-primary, #8b5cf6);
-        color: var(--dsw-alias-brand-primary, #8b5cf6);
+        border-color: #ff8a50;
+        background: linear-gradient(150deg, #ffa270, #e8632f);
+        color: #14110e; font-weight: 650;
+      }
+      .dma-btn:focus-visible, .dma-chip:focus-visible, .dma-input:focus-visible, .dma-prompt:focus-visible, .dma-select:focus-visible {
+        outline: 2px solid #ff8a50; outline-offset: 2px;
       }
       .dma-new {
         display: flex; gap: 6px; align-items: center; margin: 0 0 14px;
@@ -328,7 +350,8 @@ window.__ModuleLoader__.load({
         color: #fff; font-size: 11px; line-height: 1; padding: 0;
         opacity: 0; transition: opacity .12s; font-family: inherit;
       }
-      .dma-asset:hover .dma-asset-del, .dma-asset-del:focus-visible { opacity: 1; }
+      .dma-asset:hover .dma-asset-del, .dma-asset:focus-within .dma-asset-del, .dma-asset-del:focus-visible { opacity: 1; }
+      @media (hover: none) { .dma-asset-del { opacity: 1; } }
       .dma-asset-del:hover { background: var(--dsw-alias-state-error-primary, #d44); border-color: transparent; }
 
       /* 模板行：一行一条，归属徽章在右 */
@@ -392,11 +415,14 @@ window.__ModuleLoader__.load({
       .dma-note { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); margin: 0 0 8px; }
 
       .dma-inspiration { margin: 32px auto; }
-      .dma-inspiration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+      .dma-inspiration-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px; margin-top: 16px; }
       .dma-inspiration-card { position: relative; display: block; min-width: 0; overflow: hidden; aspect-ratio: 3 / 4; border-radius: 14px; color: white; background: var(--dsw-alias-bg-layer-2, #ddd); }
       .dma-inspiration-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
-      .dma-inspiration-card:focus-visible { outline: 3px solid var(--dsw-alias-brand-primary, #8b5cf6); outline-offset: 2px; }
-      .dma-inspiration-caption { position: absolute; bottom: 0; inset-inline: 0; padding: 28px 12px 10px; background: linear-gradient(transparent, rgba(0,0,0,.76)); font-size: 12px; }
+      .dma-inspiration-card:focus-visible, .dma-asset:focus-visible { outline: 3px solid var(--dsw-alias-brand-primary, #8b5cf6); outline-offset: 2px; }
+      .dma-inspiration-caption { position: absolute; top: 12px; left: 12px; padding: 2px 12px; border-radius: 999px; color: #24160d; background: linear-gradient(120deg, #ffd166, #ffa270); font-size: 12px; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,.45); }
+      .dma-inspiration-card img { transition: transform .3s ease; }
+      .dma-inspiration-card:hover img { transform: scale(1.035); }
+      @media (prefers-reduced-motion: reduce) { .dma-inspiration-card img, .dma-btn { transition: none; } }
       .dma-models { margin: 28px auto 20px; }
       .dma-models-heading { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
       .dma-models-heading h2 { margin: 0; font-size: 20px; }
@@ -407,22 +433,30 @@ window.__ModuleLoader__.load({
       .dma-model-icon { color: var(--dsw-alias-brand-primary, #8b5cf6); font-size: 22px; }
       /* ── 出图台 ── */
       .dma-studio {
-        box-sizing: border-box; padding: clamp(20px, 3vw, 32px); border-radius: 18px; margin: 24px auto;
+        display: grid; grid-template-columns: minmax(0, 1fr) 260px;
+        grid-template-areas: 'heading heading' 'fields controls' 'prompt controls' 'hint controls' 'refs controls';
+        gap: 12px 20px; align-items: start;
+        box-sizing: border-box; padding: clamp(20px, 3vw, 32px); border-radius: 16px; margin: 24px auto;
         background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
       }
-      .dma-studio-head { display: flex; gap: 9px; align-items: baseline; margin-bottom: 9px; }
-      .dma-studio-title { font-size: 13px; font-weight: 650; color: var(--dsw-alias-label-primary, #222); }
+      .dma-studio-head { grid-area: heading; display: flex; gap: 12px; align-items: baseline; margin-bottom: 4px; }
+      .dma-studio-title { font-size: 22px; font-weight: 650; color: var(--dsw-alias-label-primary, #222); }
       .dma-studio-note { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); }
       .dma-prompt {
-        width: 100%; box-sizing: border-box; resize: vertical; font: inherit; font-size: 13px;
-        line-height: 1.6; padding: 8px 10px; border-radius: 9px;
+        grid-area: prompt; width: 100%; min-height: 144px; box-sizing: border-box; resize: vertical; font: inherit; font-size: 14px;
+        line-height: 1.6; padding: 16px; border-radius: 12px;
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.12));
         background: var(--dsw-alias-bg-layer-1, #fff);
         color: var(--dsw-alias-label-primary, #222);
       }
       .dma-prompt:focus { outline: 1px solid var(--dsw-alias-brand-primary, #8b5cf6); }
-      .dma-controls { display: flex; gap: 8px; align-items: center; margin-top: 9px; flex-wrap: wrap; }
+      .dma-controls { grid-area: controls; display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin: 0; }
+      .dma-controls > span[style] { display: none; }
+      .dma-controls .dma-select { max-width: none; width: 100%; min-height: 42px; padding: 8px 12px; }
+      @container (max-width: 720px) {
+        .dma-studio { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'heading' 'fields' 'prompt' 'controls' 'hint' 'refs'; }
+      }
       .dma-select {
         font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 7px; max-width: 220px;
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.12));
@@ -434,19 +468,20 @@ window.__ModuleLoader__.load({
         border: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.14));
       }
       .dma-gen {
-        font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
-        padding: 5px 16px; border-radius: 8px; border: 1px solid transparent;
-        background: var(--dsw-alias-brand-primary, #8b5cf6); color: #fff;
+        font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+        min-height: 48px; padding: 8px 16px; border-radius: 12px; border: 1px solid transparent;
+        background: linear-gradient(135deg, #ff8a50, #e8632f); color: #14110e;
       }
+      .dma-gen:focus-visible { outline: 2px solid #ffd166; outline-offset: 3px; }
       .dma-gen:disabled { opacity: .45; cursor: default; }
-      .dma-hint { font-size: 10.5px; color: var(--dsw-alias-label-tertiary, #999); margin-top: 7px; }
+      .dma-hint { grid-area: hint; font-size: 12px; color: var(--dsw-alias-label-tertiary, #999); margin: 0; }
       .dma-fields {
-        display: grid; gap: 7px; margin-bottom: 9px;
+        grid-area: fields; display: grid; gap: 8px; margin-bottom: 0;
         grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
       }
       .dma-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
       .dma-field > span { font-size: 10.5px; color: var(--dsw-alias-label-tertiary, #999); }
-      .dma-refs { display: flex; gap: 7px; align-items: center; margin-top: 9px; flex-wrap: wrap; }
+      .dma-refs { grid-area: refs; display: flex; gap: 8px; align-items: center; margin-top: 0; flex-wrap: wrap; }
       .dma-refs-label { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); }
       .dma-ref {
         position: relative; width: 40px; height: 40px; border-radius: 7px; overflow: hidden;
@@ -597,6 +632,22 @@ window.__ModuleLoader__.load({
      * 上一版是「项目 / 素材 / 模板 / 出图流水」四段报表，模板被 50 条流水压到屏幕外，
      * 而它其实是出图的入口。现在模板折进出图表单里当选择器，流水换成作品墙。
      */
+    function TrashIcon () {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+        h('path', { d: 'M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5' }))
+    }
+
+    function WorkspaceIcon ({ size = 18 }) {
+      const mask = `museav-logo-${React.useId().replace(/:/g, '')}`
+      const iconSize = Math.max(size, 22)
+      return h('svg', { width: iconSize, height: iconSize, viewBox: '0 0 128 128', fill: 'none', 'aria-hidden': true },
+        h('defs', null, h('mask', { id: mask, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 128, height: 128 },
+          h('rect', { width: 128, height: 128, fill: '#000' }),
+          h('path', { d: 'M64 18L110 64L64 110L18 64L64 18Z', fill: '#fff' }),
+          h('path', { d: 'M22 59H85V69H22V59Z', fill: '#000' }))),
+        h('rect', { width: 128, height: 128, fill: '#FF8150', mask: `url(#${mask})` }))
+    }
+
     function Inspiration ({ t }) {
       const [feed, setFeed] = React.useState({ loading: true, works: [], error: null })
       React.useEffect(() => {
@@ -612,11 +663,11 @@ window.__ModuleLoader__.load({
         feed.loading ? h('p', { role: 'status' }, t('discoverLoading')) : null,
         feed.error ? h('p', { role: 'status' }, feed.error) : null,
         !feed.loading && !feed.error && !feed.works.length ? h('p', null, t('discoverEmpty')) : null,
-        h('div', { className: 'dma-inspiration-grid' }, feed.works.slice(0, 6).map((work) => h('a', {
+        h('div', { className: 'dma-inspiration-grid' }, feed.works.slice(0, 5).map((work) => h('a', {
           key: work.id, className: 'dma-inspiration-card', href: work.id ? `https://museav.top/prompts/${encodeURIComponent(work.id)}` : 'https://museav.top/discover', target: '_blank', rel: 'noopener noreferrer',
           'aria-label': work.title || work.teaser || work.author || t('discoverOpen'),
         }, h('img', { src: work.url, alt: work.title || work.teaser || '', loading: 'lazy' }),
-        h('div', { className: 'dma-inspiration-caption' }, work.title || work.author || t('discoverNote'))))))
+        h('div', { className: 'dma-inspiration-caption' }, '★ ', t('discoverFeatured'))))))
     }
 
     function ModelsCatalog ({ t }) {
@@ -769,9 +820,10 @@ window.__ModuleLoader__.load({
       }
 
       const copy = (text, message) => {
-        navigator.clipboard?.writeText(text)
+        if (!navigator.clipboard?.writeText) { setToast(t('copyFailed')); return }
+        navigator.clipboard.writeText(text)
           .then(() => setToast(message ?? t('copied')))
-          .catch(() => setToast(text))
+          .catch(() => setToast(t('copyFailed')))
       }
 
       /** 出图：CLI 同步跑完（20~60s），回执直接进作品墙。 */
@@ -902,7 +954,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'dsh-museav-view' },
         h('div', { className: 'dma-head' },
           h('div', null,
-            h('div', { className: 'dma-head-eyebrow' }, 'MUSE AV'),
+            h('div', { className: 'dma-head-eyebrow' }, h(WorkspaceIcon, { size: 24 }), h('span', null, 'MUSE AV')),
             h('div', { className: 'dma-head-sub' }, t('subtitle')),
           ),
           h('span', { className: state.full ? 'dma-count is-full' : 'dma-count' },
@@ -915,11 +967,12 @@ window.__ModuleLoader__.load({
         state.error ? h('div', { className: 'dma-error' }, '⚠️ ', state.error, ' — ', t('loginHint')) : null,
         toast ? h('div', { className: 'dma-warn' }, toast) : null,
         pendingDelete
-          ? h('div', { className: 'dma-error' },
-              '⚠️ ', t('confirmDelete', { name: pendingDelete.name || pendingDelete.id }), ' ',
-              h('button', { className: 'dma-btn is-primary', onClick: () => doDelete(pendingDelete) }, t('yes')),
-              ' ',
-              h('button', { className: 'dma-btn', onClick: () => setPendingDelete(null) }, t('no')))
+          ? h('div', { className: 'dma-confirm-backdrop', onKeyDown: (e) => { if (e.key === 'Escape') setPendingDelete(null) } },
+              h('div', { className: 'dma-confirm', role: 'alertdialog', 'aria-modal': true, 'aria-labelledby': 'dma-confirm-label' },
+                h('p', { id: 'dma-confirm-label' }, t('confirmDelete', { name: pendingDelete.name || pendingDelete.id })),
+                h('div', { className: 'dma-confirm-actions' },
+                  h('button', { className: 'dma-btn', autoFocus: true, onClick: () => setPendingDelete(null) }, t('no')),
+                  h('button', { className: 'dma-btn is-primary', onClick: () => doDelete(pendingDelete) }, t('yes')))))
           : null,
 
         h('div', { className: 'dma-projects' },
@@ -957,7 +1010,7 @@ window.__ModuleLoader__.load({
         // ── 出图台 ──
         h('div', { className: 'dma-studio' },
           h('div', { className: 'dma-studio-head' },
-            h('span', { className: 'dma-studio-title' }, '🎨 ', t('studio')),
+            h('span', { className: 'dma-studio-title' }, t('studio')),
             h('span', { className: 'dma-studio-note' },
               running ? t('generating') : (template ? t('viaTemplate', { name: template.name }) : t('viaPrompt'))),
           ),
@@ -994,13 +1047,13 @@ window.__ModuleLoader__.load({
               value: form.ratio,
               onChange: (e) => setForm((f) => ({ ...f, ratio: e.target.value })),
             }, ['3:4', '9:16', '1:1', '4:3', '16:9'].map((r) => h('option', { value: r }, r))),
-            h('span', { className: 'dma-archive' }, '📁 ', current ? current.name : t('noProject')),
+            h('span', { className: 'dma-archive' }, current ? current.name : t('noProject')),
             h('span', { style: { flex: 1 } }),
             h('button', {
               className: 'dma-gen',
               onClick: generate,
               disabled: running || (!form.prompt.trim() && !form.templateId),
-            }, running ? t('generating') : '🎨 ', t('generate')),
+            }, running ? t('generating') : t('generate')),
           ),
           h('div', { className: 'dma-hint' }, t('genHint')),
           refAssets.length
@@ -1017,7 +1070,7 @@ window.__ModuleLoader__.load({
 
         // ── 作品集：出的成的才进来；图片与视频分家 ──
         h('div', { className: 'dma-sec' },
-          h('h4', null, '🖼 ', t('works')),
+          h('h4', null, t('works')),
           h('span', { className: 'n' }, String(imageWorks.length + videoWorks.length)),
           h('span', { style: { flex: 1 } }),
           h('button', { className: 'dma-btn', onClick: () => loadProjectData(current) }, t('refresh')),
@@ -1029,7 +1082,7 @@ window.__ModuleLoader__.load({
 
         imageWorks.length
           ? h('div', null,
-              h('div', { className: 'dma-sub' }, '🖼 ', t('myImages'), h('span', { className: 'n' }, String(imageWorks.length))),
+              h('div', { className: 'dma-sub' }, t('myImages'), h('span', { className: 'n' }, String(imageWorks.length))),
               h('div', { className: 'dma-wall' }, imageWorks.map((job, i) => h('button', {
                   className: 'dma-work',
                   onClick: () => setZoom(job),
@@ -1043,7 +1096,7 @@ window.__ModuleLoader__.load({
 
         videoWorks.length
           ? h('div', null,
-              h('div', { className: 'dma-sub' }, '🎬 ', t('myVideos'), h('span', { className: 'n' }, String(videoWorks.length))),
+              h('div', { className: 'dma-sub' }, t('myVideos'), h('span', { className: 'n' }, String(videoWorks.length))),
               h('div', { className: 'dma-wall' }, videoWorks.map((job) => h('button', {
                   className: 'dma-work is-video', onClick: () => setZoom(job),
                   title: job.prompt || job.id,
@@ -1062,7 +1115,7 @@ window.__ModuleLoader__.load({
 
         // ── 素材库（垫图来源）──
         h('div', { className: 'dma-sec' },
-          h('h4', null, '🧱 ', t('assets')),
+          h('h4', null, t('assets')),
           h('span', { className: 'n' }, String(state.assets.length)),
           h('span', { style: { flex: 1 } }),
           h('input', {
@@ -1092,17 +1145,23 @@ window.__ModuleLoader__.load({
                   const on = form.refs.includes(a.url)
                   return h('div', {
                     className: `${a.mediaType === 'video' ? 'dma-asset is-video' : 'dma-asset'}${on ? ' is-ref' : ''}`,
+                    role: 'button', tabIndex: 0, 'aria-pressed': on,
                     onClick: () => setForm((f) => ({
                       ...f,
                       refs: on ? f.refs.filter((u) => u !== a.url) : [...f.refs, a.url].slice(0, 5),
                     })),
+                    onKeyDown: (event) => {
+                      if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return
+                      event.preventDefault()
+                      event.currentTarget.click()
+                    },
                     title: on ? t('unref') : t('useAsRef'),
                   },
                     h('button', {
                       className: 'dma-asset-del',
-                      title: t('deleteAsset'),
+                      title: t('deleteAsset'), 'aria-label': t('deleteAsset'),
                       onClick: (e) => { e.stopPropagation(); setPendingDelete(a) },
-                    }, '🗑'),
+                    }, h(TrashIcon)),
                     a.mediaType === 'video'
                       ? h('div', { className: 'dma-asset-cap' }, a.name)
                       : h('img', { src: a.url, alt: a.name, loading: 'lazy' }),
@@ -1112,7 +1171,7 @@ window.__ModuleLoader__.load({
 
         // ── 模板管理：浏览 / 新增 / 分享 / 撤回 / 删除 ──
         h('div', { className: 'dma-sec' },
-          h('h4', null, '🧩 ', t('templates')),
+          h('h4', null, t('templates')),
           h('span', { className: 'n' }, String(state.templates.length)),
           h('span', { style: { flex: 1 } }),
           h('button', {
@@ -1183,7 +1242,7 @@ window.__ModuleLoader__.load({
                       h('button', {
                         className: 'dma-btn', title: t('tplDelete'), disabled: tplBusy,
                         onClick: () => tplAction({ action: 'delete', id: tpl.id }),
-                      }, '🗑'))
+                      }, h(TrashIcon)))
                   : null,
               ))),
 
@@ -1225,14 +1284,6 @@ window.__ModuleLoader__.load({
 
       // 同一标识连接全局导航图标与主区页面，不再绑定到某个会话的 Tab。
       const panelId = 'museav-assets'
-      function WorkspaceIcon ({ size = 18 }) {
-        return h('svg', { width: size, height: size, viewBox: '0 0 128 128', fill: 'none', 'aria-hidden': true },
-          h('defs', null, h('mask', { id: 'museav-sidebar-logo-cut', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 128, height: 128 },
-            h('rect', { width: 128, height: 128, fill: '#000' }),
-            h('path', { d: 'M64 18L110 64L64 110L18 64L64 18Z', fill: '#fff' }),
-            h('path', { d: 'M22 59H85V69H22V59Z', fill: '#000' }))),
-          h('rect', { width: 128, height: 128, fill: '#FF8150', mask: 'url(#museav-sidebar-logo-cut)' }))
-      }
       ctx.slots.inject('main', () => ctx.slots.register({
         name: 'main', key: panelId, locale: NS, inject: () => ({ t }),
       }, AssetsView))
