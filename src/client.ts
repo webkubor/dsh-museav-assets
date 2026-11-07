@@ -324,20 +324,20 @@ window.__ModuleLoader__.load({
         font-variant-numeric: tabular-nums;
       }
       .dma-warn {
-        font-size: 11.5px; color: #e8632f;
-        margin: 0 0 10px;
+        max-width: 1160px; font-size: 11.5px; color: #e8632f;
+        margin: 0 auto 10px;
       }
 
-      .dma-sec { display: flex; align-items: baseline; gap: 9px; margin: 20px auto 9px; }
+      .dma-sec { display: flex; align-items: baseline; gap: 10px; margin: 32px auto 12px; }
       .dma-sec h4 {
-        margin: 0; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-        color: var(--dsw-alias-label-secondary, #666); font-weight: 600;
+        margin: 0; font-size: 20px; letter-spacing: .01em;
+        color: var(--dsw-alias-label-primary, #f2ece5); font-weight: 700;
       }
-      .dma-sec .n { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); font-variant-numeric: tabular-nums; }
+      .dma-sec .n { font-size: 13px; color: var(--dsw-alias-label-secondary, #a89e93); font-variant-numeric: tabular-nums; }
 
       /* 素材网格：方图，缩略图铺满，多余裁切 */
       .dma-grid {
-        display: grid; gap: 8px;
+        max-width: 1160px; margin: 0 auto; display: grid; gap: 12px;
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       }
       .dma-asset {
@@ -355,7 +355,10 @@ window.__ModuleLoader__.load({
         font-size: 10px; color: #fff; text-align: left;
         background: linear-gradient(transparent, rgba(0,0,0,.72));
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        opacity: 0; transition: opacity .15s;
       }
+      .dma-asset:hover .dma-asset-cap, .dma-asset:focus-within .dma-asset-cap, .dma-asset.is-video .dma-asset-cap, .dma-asset.is-ref .dma-asset-cap { opacity: 1; }
+      @media (hover: none) { .dma-asset-cap { opacity: 1; } }
       .dma-asset.is-video .dma-asset-cap::before { content: '▸ '; }
       /* 删除按钮只在 hover / 聚焦时出现：素材是拿去当垫图的，误删的代价不对称 */
       .dma-asset-del {
@@ -371,13 +374,13 @@ window.__ModuleLoader__.load({
 
       /* 模板行：一行一条，归属徽章在右 */
       .dma-tpl {
-        display: flex; gap: 10px; align-items: center; padding: 7px 10px;
-        border-radius: 9px; margin-bottom: 3px; cursor: pointer;
-        background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.015));
-        border: 1px solid transparent;
+        max-width: 1160px; box-sizing: border-box;
+        display: flex; gap: 10px; align-items: center; padding: 10px 14px;
+        border-radius: 12px; margin: 0 auto 6px; cursor: pointer;
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.015));
+        border: 1px solid var(--dsw-alias-border-l1, transparent);
       }
-      .dma-tpl:hover { border-color: var(--dsw-alias-border-l1, rgba(0,0,0,.07)); }
-      .dma-tpl { display: flex; gap: 8px; align-items: center; }
+      .dma-tpl:hover { border-color: rgba(255,138,80,.45); }
       .dma-tpl-main {
         flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center;
         background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left;
@@ -385,7 +388,8 @@ window.__ModuleLoader__.load({
       .dma-tpl-acts { display: flex; gap: 6px; flex: none; opacity: 0; transition: opacity .12s; }
       .dma-tpl:hover .dma-tpl-acts, .dma-tpl-acts:focus-within { opacity: 1; }
       .dma-tpl-form {
-        display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; margin-bottom: 10px;
+        max-width: 1160px; box-sizing: border-box;
+        display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; margin: 0 auto 10px;
         border-radius: 10px; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
       }
@@ -427,7 +431,7 @@ window.__ModuleLoader__.load({
         border: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.14));
         color: var(--dsw-alias-label-tertiary, #999); font-size: 13px;
       }
-      .dma-note { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); margin: 0 0 8px; }
+      .dma-note { max-width: 1160px; font-size: 12px; color: var(--dsw-alias-label-tertiary, #999); margin: 0 auto 12px; }
 
       .dma-inspiration { margin: 32px auto; }
       .dma-inspiration-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px; margin-top: 16px; }
@@ -438,39 +442,43 @@ window.__ModuleLoader__.load({
       .dma-inspiration-card img { transition: transform .3s ease; }
       .dma-inspiration-card:hover img { transform: scale(1.035); }
       @media (prefers-reduced-motion: reduce) { .dma-inspiration-card img, .dma-btn { transition: none; } }
-      .dma-models { margin: 28px auto 20px; }
+      .dma-models { margin: 20px auto 12px; }
       .dma-models-heading { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
       .dma-models-heading h2 { margin: 0; font-size: 20px; }
       .dma-models-heading span, .dma-models p { color: var(--dsw-alias-label-secondary, #666); font-size: 13px; }
-      .dma-model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 14px; }
-      .dma-model-card { display: flex; flex-direction: column; gap: 6px; padding: 20px; border-radius: 16px; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.03)); border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.08)); }
-      .dma-model-card > span:last-child { color: var(--dsw-alias-label-secondary, #666); font-size: 12px; }
-      .dma-model-icon { color: #ff8a50; font-size: 22px; }
+      .dma-models-heading a { color: #ff8a50; font-size: 13px; text-decoration: none; }
+      .dma-models-heading a:hover { color: #ffa270; text-decoration: underline; }
+      .dma-models-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: 12px; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); font-size: 13px; }
+      .dma-models-note { color: var(--dsw-alias-label-secondary); }
+      .dma-model-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+      .dma-model-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--dsw-alias-bg-layer-3); border: 1px solid var(--dsw-alias-border-l1); font-size: 12px; }
+      .dma-model-pill > span { color: var(--dsw-alias-label-secondary); }
+      .dma-model-icon { color: #ff8a50; }
       /* ── 出图台 ── */
       .dma-studio {
         display: grid; grid-template-columns: minmax(0, 1fr) 260px;
-        grid-template-areas: 'heading heading' 'fields controls' 'prompt controls' 'hint controls' 'refs controls';
         gap: 12px 20px; align-items: start;
         box-sizing: border-box; padding: clamp(20px, 3vw, 32px); border-radius: 16px; margin: 24px auto;
         background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
       }
-      .dma-studio-head { grid-area: heading; display: flex; gap: 12px; align-items: baseline; margin-bottom: 4px; }
+      .dma-studio-head { grid-column: 1 / -1; display: flex; gap: 12px; align-items: baseline; margin-bottom: 4px; }
       .dma-studio-title { font-size: 22px; font-weight: 650; color: var(--dsw-alias-label-primary, #222); }
       .dma-studio-note { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); }
       .dma-prompt {
-        grid-area: prompt; width: 100%; min-height: 144px; box-sizing: border-box; resize: vertical; font: inherit; font-size: 14px;
+        grid-column: 1; width: 100%; min-height: 144px; box-sizing: border-box; resize: vertical; font: inherit; font-size: 14px;
         line-height: 1.6; padding: 16px; border-radius: 12px;
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.12));
         background: var(--dsw-alias-bg-layer-1, #fff);
         color: var(--dsw-alias-label-primary, #222);
       }
       .dma-prompt:focus { outline: 1px solid #ff8a50; }
-      .dma-controls { grid-area: controls; display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin: 0; }
+      .dma-controls { grid-column: 2; grid-row: 2 / span 4; display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin: 0; }
       .dma-controls > span[style] { display: none; }
       .dma-controls .dma-select { max-width: none; width: 100%; min-height: 42px; padding: 8px 12px; }
       @container (max-width: 720px) {
-        .dma-studio { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'heading' 'fields' 'prompt' 'controls' 'hint' 'refs'; }
+        .dma-studio { grid-template-columns: minmax(0, 1fr); }
+        .dma-controls { grid-column: 1; grid-row: auto; }
       }
       .dma-select {
         font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 7px; max-width: 220px;
@@ -502,14 +510,14 @@ window.__ModuleLoader__.load({
       }
       .dma-gen:focus-visible { outline: 2px solid #ffd166; outline-offset: 3px; }
       .dma-gen:disabled { opacity: .45; cursor: default; }
-      .dma-hint { grid-area: hint; font-size: 12px; color: var(--dsw-alias-label-tertiary, #999); margin: 0; }
+      .dma-hint { grid-column: 1; font-size: 12px; color: var(--dsw-alias-label-tertiary, #999); margin: 0; }
       .dma-fields {
-        grid-area: fields; display: grid; gap: 8px; margin-bottom: 0;
+        grid-column: 1; display: grid; gap: 8px; margin-bottom: 0;
         grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
       }
       .dma-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
       .dma-field > span { font-size: 10.5px; color: var(--dsw-alias-label-tertiary, #999); }
-      .dma-refs { grid-area: refs; display: flex; gap: 8px; align-items: center; margin-top: 0; flex-wrap: wrap; }
+      .dma-refs { grid-column: 1; display: flex; gap: 8px; align-items: center; margin-top: 0; flex-wrap: wrap; }
       .dma-refs-label { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); }
       .dma-ref {
         position: relative; width: 40px; height: 40px; border-radius: 7px; overflow: hidden;
@@ -519,29 +527,34 @@ window.__ModuleLoader__.load({
       .dma-ref .dma-asset-del { opacity: 1; width: 15px; height: 15px; font-size: 9px; }
 
       .dma-sub {
-        display: flex; gap: 8px; align-items: baseline;
-        margin: 14px 0 8px; font-size: 12px; font-weight: 600;
+        max-width: 1160px; display: flex; gap: 8px; align-items: baseline;
+        margin: 14px auto 8px; font-size: 13px; font-weight: 600;
         color: var(--dsw-alias-label-secondary, #666);
       }
       .dma-sub .n { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); font-weight: 400; }
       /* ── 作品集：这是「看图」的地方，图片本身是主角 ── */
       .dma-wall {
-        display: grid; gap: 8px;
+        max-width: 1160px; margin: 0 auto; display: grid; gap: 12px;
         grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
       }
       .dma-work {
-        position: relative; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+        position: relative; aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden;
         cursor: zoom-in; padding: 0; font-family: inherit; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.03));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+        transition: transform .18s ease, border-color .18s ease;
       }
-      .dma-work:hover { border-color: #ff8a50; }
+      .dma-work:hover { border-color: #ff8a50; transform: translateY(-3px); }
+      .dma-work:focus-visible { outline: 3px solid #ff8a50; outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) { .dma-work { transition: none; } .dma-work:hover { transform: none; } }
       .dma-work img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .dma-work-cap {
         position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 7px 5px;
         display: flex; gap: 5px; align-items: flex-end;
         background: linear-gradient(transparent, rgba(0,0,0,.78));
-        text-align: left;
+        text-align: left; opacity: 0; transition: opacity .15s;
       }
+      .dma-work:hover .dma-work-cap, .dma-work:focus-visible .dma-work-cap, .dma-work.is-video .dma-work-cap { opacity: 1; }
+      @media (hover: none) { .dma-work-cap { opacity: 1; } }
       .dma-work-dot { flex: none; font-size: 9px; line-height: 1.3; }
       .dma-work-prompt {
         font-size: 10.5px; color: #fff; line-height: 1.35;
@@ -594,12 +607,14 @@ window.__ModuleLoader__.load({
       .dma-job.is-failed .dma-job-prompt { color: #e8632f; }
 
       .dma-empty {
+        max-width: 1160px; box-sizing: border-box; margin: 0 auto;
         padding: 18px; border-radius: 10px; text-align: center;
         color: var(--dsw-alias-label-tertiary, #999); font-size: 12.5px;
         border: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.1));
       }
       .dma-error {
-        padding: 12px 14px; border-radius: 10px; margin-bottom: 12px;
+        max-width: 1160px; box-sizing: border-box; margin: 0 auto 12px;
+        padding: 12px 14px; border-radius: 10px;
         color: #e8632f; font-size: 12.5px;
         background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.015));
         border: 1px solid var(--dsw-alias-state-error-primary, rgba(212,68,68,.35));
@@ -708,13 +723,15 @@ window.__ModuleLoader__.load({
         return () => { alive = false }
       }, [])
       return h('section', { className: 'dma-models', 'aria-label': t('modelsTitle') },
-        h('div', { className: 'dma-models-heading' }, h('h2', null, t('modelsTitle')), h('span', null, t('modelsRouting'))),
-        catalog.loading ? h('p', null, t('modelsLoading')) : null,
-        catalog.error ? h('p', { role: 'status' }, catalog.error) : null,
-        !catalog.loading && !catalog.error && !catalog.models.length ? h('p', null, t('modelsEmpty')) : null,
-        h('div', { className: 'dma-model-grid' }, catalog.models.map((model) => h('div', { className: 'dma-model-card', key: model },
-          h('svg', { className: 'dma-model-icon', width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, 'aria-hidden': true }, h('path', { d: 'M12 3 14.3 9.7 21 12 14.3 14.3 12 21 9.7 14.3 3 12 9.7 9.7Z' })),
-          h('strong', null, model), h('span', null, t('modelImage'))))))
+        h('div', { className: 'dma-models-bar' },
+          h('strong', null, t('modelsTitle')),
+          h('span', { className: 'dma-models-note' }, t('modelsRouting')),
+          catalog.loading ? h('span', null, t('modelsLoading')) : null,
+          catalog.error ? h('span', { role: 'status' }, catalog.error) : null,
+          !catalog.loading && !catalog.error && !catalog.models.length ? h('span', null, t('modelsEmpty')) : null,
+          h('div', { className: 'dma-model-pills' }, catalog.models.map((model) => h('span', { className: 'dma-model-pill', key: model },
+            h('svg', { className: 'dma-model-icon', width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, 'aria-hidden': true }, h('path', { d: 'M12 3 14.3 9.7 21 12 14.3 14.3 12 21 9.7 14.3 3 12 9.7 9.7Z' })),
+            h('strong', null, model), h('span', null, t('modelImage')))))))
     }
 
     function AssetsView (props) {
