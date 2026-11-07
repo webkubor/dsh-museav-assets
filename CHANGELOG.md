@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.2.0...v0.3.0) (2026-11-07)
+
+
+### ✨ Features
+
+* 将 Museav 升级为独立创作工作台 ([#13](https://github.com/webkubor/dsh-museav-assets/issues/13)) ([73daa2f](https://github.com/webkubor/dsh-museav-assets/commit/73daa2f3a541b2add9fa36df5f4b3203aeccf521))
+
 ## [0.2.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.1.8...v0.2.0) (2026-11-05)
 
 
