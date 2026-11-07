@@ -51,6 +51,12 @@ window.__ModuleLoader__.load({
         discoverTitle: '灵感库',
         discoverNote: '来自 MUSE AV 精选作品',
         discoverFeatured: '精选',
+        ratio: '出图比例',
+        'ratio_3_4': '图文首选',
+        'ratio_9_16': '手机壁纸',
+        'ratio_1_1': '头像 / 主图',
+        'ratio_4_3': '通用横图',
+        'ratio_16_9': '宽屏头图',
         discoverLoading: '正在加载灵感…',
         discoverFailed: '灵感暂时无法加载，请检查网络后重试。',
         discoverEmpty: '暂时没有精选作品',
@@ -142,6 +148,12 @@ window.__ModuleLoader__.load({
         discoverTitle: 'Inspiration',
         discoverNote: 'Featured works from MUSE AV',
         discoverFeatured: 'Featured',
+        ratio: 'Aspect ratio',
+        'ratio_3_4': 'Social post',
+        'ratio_9_16': 'Phone wallpaper',
+        'ratio_1_1': 'Avatar / key art',
+        'ratio_4_3': 'Landscape',
+        'ratio_16_9': 'Wide banner',
         discoverLoading: 'Loading inspiration…',
         discoverFailed: 'Unable to load inspiration. Check your connection and try again.',
         discoverEmpty: 'No featured works yet',
@@ -231,7 +243,7 @@ window.__ModuleLoader__.load({
         --dsw-alias-bg-layer-3: #2a2119;
         --dsw-alias-label-primary: #f2ece5;
         --dsw-alias-label-secondary: #a89e93;
-        --dsw-alias-label-tertiary: #94897c;
+        --dsw-alias-label-tertiary: #7d746a;
         --dsw-alias-border-l1: rgba(215,172,103,.22);
         --dsw-alias-brand-primary: #ff8a50;
         container-type: inline-size;
@@ -288,30 +300,30 @@ window.__ModuleLoader__.load({
         background: var(--dsw-alias-bg-layer-1, #fff);
         color: var(--dsw-alias-label-primary, #222);
       }
-      .dma-input:focus { outline: 1px solid var(--dsw-alias-brand-primary, #8b5cf6); }
+      .dma-input:focus { outline: 1px solid #ff8a50; }
 
       /* 项目切换条：胶囊，不做卡片墙 —— 项目数 ≤5，一行放得下 */
       .dma-projects { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
       .dma-chip {
-        display: flex; flex-direction: column; gap: 1px; align-items: flex-start;
-        padding: 6px 11px; border-radius: 9px; cursor: pointer; font-family: inherit;
-        background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.015));
+        display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+        padding: 8px 12px; border-radius: 10px; cursor: pointer; font-family: inherit;
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.015));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
         color: var(--dsw-alias-label-primary, #222);
       }
-      .dma-chip:hover { border-color: var(--dsw-alias-border-l1, rgba(0,0,0,.16)); }
+      .dma-chip:hover { border-color: rgba(255,138,80,.45); }
       .dma-chip.is-active {
-        border-color: var(--dsw-alias-brand-primary, #8b5cf6);
-        background: var(--dsw-alias-bg-layer-3, rgba(139,92,246,.08));
+        border-color: #ff8a50;
+        background: rgba(255,138,80,.12);
       }
       .dma-chip-name { font-size: 13px; font-weight: 600; }
-      .dma-chip.is-active .dma-chip-name { color: var(--dsw-alias-brand-primary, #8b5cf6); }
+      .dma-chip.is-active .dma-chip-name { color: #ff8a50; }
       .dma-chip-meta {
         font-size: 10.5px; color: var(--dsw-alias-label-tertiary, #999);
         font-variant-numeric: tabular-nums;
       }
       .dma-warn {
-        font-size: 11.5px; color: var(--dsw-alias-state-error-primary, #d44);
+        font-size: 11.5px; color: #e8632f;
         margin: 0 0 10px;
       }
 
@@ -328,12 +340,14 @@ window.__ModuleLoader__.load({
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       }
       .dma-asset {
-        position: relative; aspect-ratio: 1 / 1; border-radius: 9px; overflow: hidden;
+        position: relative; aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden;
         cursor: pointer; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.03));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+        transition: transform .18s ease, border-color .18s ease;
       }
-      .dma-asset:hover { border-color: var(--dsw-alias-brand-primary, #8b5cf6); }
-      .dma-asset.is-ref { border-color: var(--dsw-alias-brand-primary, #8b5cf6); box-shadow: 0 0 0 2px var(--dsw-alias-brand-primary, #8b5cf6) inset; }
+      .dma-asset:hover { border-color: rgba(255,138,80,.5); transform: translateY(-3px); }
+      @media (prefers-reduced-motion: reduce) { .dma-asset { transition: none; } .dma-asset:hover { transform: none; } }
+      .dma-asset.is-ref { border-color: #ff8a50; box-shadow: 0 0 0 2px #ff8a50 inset; }
       .dma-asset img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .dma-asset-cap {
         position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 6px 4px;
@@ -341,7 +355,7 @@ window.__ModuleLoader__.load({
         background: linear-gradient(transparent, rgba(0,0,0,.72));
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
-      .dma-asset.is-video .dma-asset-cap::before { content: '🎬 '; }
+      .dma-asset.is-video .dma-asset-cap::before { content: '▸ '; }
       /* 删除按钮只在 hover / 聚焦时出现：素材是拿去当垫图的，误删的代价不对称 */
       .dma-asset-del {
         position: absolute; top: 4px; right: 4px; z-index: 2;
@@ -352,7 +366,7 @@ window.__ModuleLoader__.load({
       }
       .dma-asset:hover .dma-asset-del, .dma-asset:focus-within .dma-asset-del, .dma-asset-del:focus-visible { opacity: 1; }
       @media (hover: none) { .dma-asset-del { opacity: 1; } }
-      .dma-asset-del:hover { background: var(--dsw-alias-state-error-primary, #d44); border-color: transparent; }
+      .dma-asset-del:hover { background: #e8632f; border-color: transparent; }
 
       /* 模板行：一行一条，归属徽章在右 */
       .dma-tpl {
@@ -389,8 +403,8 @@ window.__ModuleLoader__.load({
         color: var(--dsw-alias-label-secondary, #666);
       }
       .dma-badge.is-mine {
-        border-color: var(--dsw-alias-brand-primary, #8b5cf6);
-        color: var(--dsw-alias-brand-primary, #8b5cf6);
+        border-color: #ff8a50;
+        color: #ff8a50;
       }
 
       .dma-job {
@@ -416,9 +430,9 @@ window.__ModuleLoader__.load({
 
       .dma-inspiration { margin: 32px auto; }
       .dma-inspiration-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px; margin-top: 16px; }
-      .dma-inspiration-card { position: relative; display: block; min-width: 0; overflow: hidden; aspect-ratio: 3 / 4; border-radius: 14px; color: white; background: var(--dsw-alias-bg-layer-2, #ddd); }
+      .dma-inspiration-card { position: relative; display: block; min-width: 0; overflow: hidden; aspect-ratio: 3 / 4; border-radius: 16px; color: white; background: var(--dsw-alias-bg-layer-2, #ddd); }
       .dma-inspiration-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
-      .dma-inspiration-card:focus-visible, .dma-asset:focus-visible { outline: 3px solid var(--dsw-alias-brand-primary, #8b5cf6); outline-offset: 2px; }
+      .dma-inspiration-card:focus-visible, .dma-asset:focus-visible { outline: 3px solid #ff8a50; outline-offset: 2px; }
       .dma-inspiration-caption { position: absolute; top: 12px; left: 12px; padding: 2px 12px; border-radius: 999px; color: #24160d; background: linear-gradient(120deg, #ffd166, #ffa270); font-size: 12px; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,.45); }
       .dma-inspiration-card img { transition: transform .3s ease; }
       .dma-inspiration-card:hover img { transform: scale(1.035); }
@@ -430,7 +444,7 @@ window.__ModuleLoader__.load({
       .dma-model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 14px; }
       .dma-model-card { display: flex; flex-direction: column; gap: 6px; padding: 20px; border-radius: 16px; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.03)); border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.08)); }
       .dma-model-card > span:last-child { color: var(--dsw-alias-label-secondary, #666); font-size: 12px; }
-      .dma-model-icon { color: var(--dsw-alias-brand-primary, #8b5cf6); font-size: 22px; }
+      .dma-model-icon { color: #ff8a50; font-size: 22px; }
       /* ── 出图台 ── */
       .dma-studio {
         display: grid; grid-template-columns: minmax(0, 1fr) 260px;
@@ -450,7 +464,7 @@ window.__ModuleLoader__.load({
         background: var(--dsw-alias-bg-layer-1, #fff);
         color: var(--dsw-alias-label-primary, #222);
       }
-      .dma-prompt:focus { outline: 1px solid var(--dsw-alias-brand-primary, #8b5cf6); }
+      .dma-prompt:focus { outline: 1px solid #ff8a50; }
       .dma-controls { grid-area: controls; display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin: 0; }
       .dma-controls > span[style] { display: none; }
       .dma-controls .dma-select { max-width: none; width: 100%; min-height: 42px; padding: 8px 12px; }
@@ -463,10 +477,23 @@ window.__ModuleLoader__.load({
         background: var(--dsw-alias-bg-layer-1, #fff); color: var(--dsw-alias-label-primary, #222);
       }
       .dma-archive {
-        font-size: 11.5px; color: var(--dsw-alias-label-secondary, #666);
-        padding: 3px 8px; border-radius: 7px;
+        font-size: 12px; color: var(--dsw-alias-label-secondary, #666);
+        padding: 8px 12px; border-radius: 10px;
         border: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.14));
       }
+      .dma-ratio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+      .dma-ratio {
+        display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+        padding: 8px 10px; border-radius: 10px; cursor: pointer; font-family: inherit;
+        font-size: 13px; font-weight: 600; color: var(--dsw-alias-label-secondary, #a89e93);
+        background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.015));
+        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+      }
+      .dma-ratio:hover { border-color: rgba(255,138,80,.45); }
+      .dma-ratio.is-active { border-color: #ff8a50; background: rgba(255,138,80,.12); color: #ff8a50; }
+      .dma-ratio:focus-visible { outline: 2px solid #ff8a50; outline-offset: 2px; }
+      .dma-ratio-hint { font-size: 10.5px; font-weight: 400; color: var(--dsw-alias-label-tertiary, #7d746a); }
+      .dma-ratio.is-active .dma-ratio-hint { color: var(--dsw-alias-label-secondary, #a89e93); }
       .dma-gen {
         font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
         min-height: 48px; padding: 8px 16px; border-radius: 12px; border: 1px solid transparent;
@@ -485,7 +512,7 @@ window.__ModuleLoader__.load({
       .dma-refs-label { font-size: 11px; color: var(--dsw-alias-label-tertiary, #999); }
       .dma-ref {
         position: relative; width: 40px; height: 40px; border-radius: 7px; overflow: hidden;
-        border: 1px solid var(--dsw-alias-brand-primary, #8b5cf6);
+        border: 1px solid #ff8a50;
       }
       .dma-ref img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .dma-ref .dma-asset-del { opacity: 1; width: 15px; height: 15px; font-size: 9px; }
@@ -506,7 +533,7 @@ window.__ModuleLoader__.load({
         cursor: zoom-in; padding: 0; font-family: inherit; background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.03));
         border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
       }
-      .dma-work:hover { border-color: var(--dsw-alias-brand-primary, #8b5cf6); }
+      .dma-work:hover { border-color: #ff8a50; }
       .dma-work img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .dma-work-cap {
         position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 7px 5px;
@@ -548,8 +575,8 @@ window.__ModuleLoader__.load({
       /* 空态里的「去有素材的项目看看」 */
       .dma-jump {
         display: inline-block; margin-top: 9px; cursor: pointer; font-family: inherit;
-        background: none; border: 1px solid var(--dsw-alias-brand-primary, #8b5cf6);
-        color: var(--dsw-alias-brand-primary, #8b5cf6); border-radius: 7px;
+        background: none; border: 1px solid #ff8a50;
+        color: #ff8a50; border-radius: 7px;
         font-size: 11.5px; padding: 3px 10px;
       }
       .dma-job-body { flex: 1; min-width: 0; }
@@ -563,7 +590,7 @@ window.__ModuleLoader__.load({
         font-size: 11px; color: var(--dsw-alias-label-tertiary, #999);
         font-variant-numeric: tabular-nums;
       }
-      .dma-job.is-failed .dma-job-prompt { color: var(--dsw-alias-state-error-primary, #d44); }
+      .dma-job.is-failed .dma-job-prompt { color: #e8632f; }
 
       .dma-empty {
         padding: 18px; border-radius: 10px; text-align: center;
@@ -572,7 +599,7 @@ window.__ModuleLoader__.load({
       }
       .dma-error {
         padding: 12px 14px; border-radius: 10px; margin-bottom: 12px;
-        color: var(--dsw-alias-state-error-primary, #d44); font-size: 12.5px;
+        color: #e8632f; font-size: 12.5px;
         background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.015));
         border: 1px solid var(--dsw-alias-state-error-primary, rgba(212,68,68,.35));
         overflow-wrap: anywhere;
@@ -1042,11 +1069,12 @@ window.__ModuleLoader__.load({
               h('option', { value: '' }, t('noTemplate')),
               state.templates.map((tpl) => h('option', { value: tpl.id }, `${tpl.name}${tpl.ratio ? ` · ${tpl.ratio}` : ''}`)),
             ),
-            h('select', {
-              className: 'dma-select',
-              value: form.ratio,
-              onChange: (e) => setForm((f) => ({ ...f, ratio: e.target.value })),
-            }, ['3:4', '9:16', '1:1', '4:3', '16:9'].map((r) => h('option', { value: r }, r))),
+            h('div', { className: 'dma-ratio-group', role: 'radiogroup', 'aria-label': t('ratio') },
+              ['3:4', '9:16', '1:1', '4:3', '16:9'].map((r) => h('button', {
+                key: r, type: 'button', role: 'radio', 'aria-checked': form.ratio === r,
+                className: `dma-ratio${form.ratio === r ? ' is-active' : ''}`,
+                onClick: () => setForm((f) => ({ ...f, ratio: r })),
+              }, r, h('span', { className: 'dma-ratio-hint' }, t(`ratio_${r.replace(':', '_')}`))))),
             h('span', { className: 'dma-archive' }, current ? current.name : t('noProject')),
             h('span', { style: { flex: 1 } }),
             h('button', {

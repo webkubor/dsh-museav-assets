@@ -161,12 +161,12 @@ test('出图台是这个 tab 的第一段：提示词框 + 比例 + 模板 + 出
   const ta = findAll(vdom, (n) => n.type === 'textarea')
   assert.ok(ta.length >= 1, '要有提示词输入框')
   assert.equal(ta[0].props.className, 'dma-prompt')
-  // 比例下拉：按「选项值里含 9:16」认 —— 模板下拉的文案里也带 3:4，只搜 3:4 会认错
-  const ratioSelect = findAll(vdom, (n) => n.type === 'select')
-    .find((n) => findAll(n, (x) => x.type === 'option').some((o) => o.props.value === '9:16'))
-  assert.ok(ratioSelect, '要有比例选择器')
-  assert.deepEqual(findAll(ratioSelect, (n) => n.type === 'option').map((o) => o.props.value),
+  // 比例是瓦片按钮（像 C 端出图台），不是下拉：按角色找，认「9:16」这个瓦片
+  const ratioTiles = findAll(vdom, (n) => /^dma-ratio( is-active)?$/.test(n.props?.className ?? ''))
+  assert.ok(ratioTiles.length >= 5, '要有比例瓦片')
+  assert.deepEqual(ratioTiles.slice(0, 5).map((n) => n.children[0]),
     ['3:4', '9:16', '1:1', '4:3', '16:9'])
+  assert.equal(ratioTiles[0].props['aria-checked'], true, '默认选中第一个比例')
   const gen = findAll(vdom, (n) => n.props?.className === 'dma-gen')
   assert.equal(gen.length, 1, '只有一个出图按钮')
   assert.equal(gen[0].props.disabled, true, '没提示词也没模板时，出图按钮必须是禁用的')
