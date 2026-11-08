@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.3.0...v0.4.0) (2026-11-08)
+
+
+### ✨ Features
+
+* **scripts:** deploy/rollback 收敛到 dsh-dev.mjs 统一通道，附 pre-commit 门禁 ([86ea19e](https://github.com/webkubor/dsh-museav-assets/commit/86ea19ef76cd4b18c2c1ef699ee3f124ed82c01c))
+
 ## [0.3.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.2.0...v0.3.0) (2026-11-07)
 
 
