@@ -17,7 +17,9 @@ Museav 工作台 —— DeepSeek Harness 插件（`@dsh-plugins/dsh-museav-asset
 ```bash
 npm run check     # 发布前门禁（打包契约 + 测试）
 npm run test      # 测试
-npm run deploy    # 部署到本机 DSH profile
+npm run check:dsh # 宿主契约门禁（真 cordis 内核跑 apply）
+npm run deploy    # 门禁 → 备份 → 装进 desktop；禁止手写 rsync 进 profile
+npm run rollback  # 桌面端起不来时回滚
 ```
 
 ## 约定

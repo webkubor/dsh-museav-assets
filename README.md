@@ -41,13 +41,14 @@
 桌面端在**应用内的插件管理**里装 —— 它从 npm 拉。命令行装不进 `desktop` profile
 （`profile "desktop" is managed exclusively by the Electron application`）。
 
-自建 profile（CLI 能管的，例如本地开发用的 `desktop-local`）：
+本地开发（改完代码装进桌面端试）：
 
 ```sh
-npm run deploy   # rsync 进 ~/.dsh/profiles/desktop-local/node_modules/@dsh-plugins/dsh-museav-assets/
+npm run deploy     # 门禁 → 备份 → 装进 ~/.dsh/profiles/desktop/（不过门禁不部署）
+npm run rollback   # 起不来时恢复上一份；rollback:npm 装回 npm 正式版
 ```
 
-再把包名加进该 profile（`~/.dsh/profiles/desktop-local/package.json`）：
+流程细节见 [../SOP.md](../SOP.md)「怎么测 / 怎么部署 / 怎么回滚」。首次安装还需把包名加进 profile（`~/.dsh/profiles/desktop/package.json`）：
 
 ```jsonc
 "dependencies": { "@dsh-plugins/dsh-museav-assets": "^0.1.1" },
