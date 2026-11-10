@@ -23,6 +23,8 @@ import { tmpdir } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import {
   runMuseav,
+  probeAuth,
+  isAuthFailure,
   mergeProjects,
   mergeAssets,
   mergeTemplates,
@@ -84,6 +86,32 @@ function isSameOrigin (request) {
   const site = request.headers['sec-fetch-site']
   if (typeof site === 'string') return site === 'same-origin' || site === 'none'
   return true
+}
+
+/**
+ * 认证失效时给用户的**可操作**提示。
+ *
+ * 原来只透传 CLI 的 stderr（一句 `unauthorized`），用户既不知道是登录问题，
+ * 也不知道要做什么。现在明确告诉他：凭证过期了，跑 `museav login` 重新授权。
+ * 客户端据此渲染一个「去登录」的引导，而不是一坨红字。
+ */
+const AUTH_HINT = 'MUSE AV 登录已过期，请先在终端运行 `museav login` 重新登录后重试。'
+
+/**
+ * 把 CLI 的失败结果转成统一的响应体。
+ *
+ * 认证类失败会额外带 `authRequired: true` 与 `authHint`；其它失败保持原样，
+ * 只补一个不改变既有语义的可选字段。
+ *
+ * @param {{ok: boolean, error: string|null, stderr?: string}} res CLI 调用结果
+ * @param {Record<string, unknown>} [extra] 该路由自己的空态字段（如 projects: []）
+ */
+function failPayload (res, extra = {}) {
+  const text = res.error || res.stderr || ''
+  if (isAuthFailure(text)) {
+    return { ok: false, error: AUTH_HINT, authRequired: true, ...extra }
+  }
+  return { ok: false, error: text || '未知错误', ...extra }
 }
 
 function sendJson (response, status, payload) {
@@ -176,7 +204,13 @@ async function stageAndUpload ({ project, filename, data, name, tag }, cliOpts) 
     if (name) args.push('--name', String(name).slice(0, 60))
     if (tag) args.push('--tag', String(tag).slice(0, 30))
     const res = await runMuseav(args, { ...cliOpts, timeoutMs: 120000 })
-    if (!res.ok) return { ok: false, error: res.error }
+    if (!res.ok) {
+      // 认证失败要单独标出来：上层好渲染「去登录」的引导。
+      if (isAuthFailure(res.error)) {
+        return { ok: false, error: AUTH_HINT, authRequired: true }
+      }
+      return { ok: false, error: res.error }
+    }
     // CLI 的 stdout 是新素材的 cdn_url
     const url = res.stdout.trim()
     return { ok: true, url: url || null, filename: basename(filename) }
@@ -218,6 +252,12 @@ export function apply (ctx) {
     handler: async (request, response) => {
       if (!guard(request, response, ['GET', 'HEAD'])) return
       const res = await runMuseav(['--version'], cliOpts())
+      // `--version` 不需要登录，永远成功 —— 光看它探测不出认证状态（2026-11-10 的原始缺陷）。
+      // 所以额外真跑一条需要认证的 `museav projects`，三态回报：
+      //   ok       已登录
+      //   expired  凭证过期/未登录 → 用户去跑 museav login
+      //   unknown  CLI 缺失/超时/其它错（不是认证问题）
+      const auth = res.ok ? await probeAuth(cliOpts()) : { auth: 'unknown', error: res.error }
       sendJson(response, 200, {
         ok: res.ok,
         cli: {
@@ -225,6 +265,9 @@ export function apply (ctx) {
           version: res.ok ? res.stdout.trim() : null,
           error: res.error,
         },
+        auth: auth.auth,
+        authRequired: auth.auth === 'expired',
+        authHint: auth.auth === 'expired' ? AUTH_HINT : null,
         projectLimit: PROJECT_LIMIT,
       })
     },
@@ -257,7 +300,7 @@ export function apply (ctx) {
     handler: async (request, response) => {
       if (!guard(request, response, ['GET', 'HEAD'])) return
       const res = await runMuseav(['models'], cliOpts())
-      if (!res.ok) return sendJson(response, 200, { ok: false, error: res.error, models: [] })
+      if (!res.ok) return sendJson(response, 200, failPayload(res, { models: [] }))
       const models = res.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
       sendJson(response, 200, { ok: true, models })
     },
@@ -283,7 +326,7 @@ export function apply (ctx) {
         }
         const res = await runMuseav(['projects', 'create', '--name', name], cliOpts())
         if (!res.ok) {
-          sendJson(response, 200, { ok: false, error: res.error })
+          sendJson(response, 200, failPayload(res))
           return
         }
         sendJson(response, 200, { ok: true, id: res.stdout.trim() || null })
@@ -292,7 +335,7 @@ export function apply (ctx) {
 
       const res = await runMuseav(['projects'], cliOpts())
       if (!res.ok) {
-        sendJson(response, 200, { ok: false, error: res.error, projects: [] })
+        sendJson(response, 200, failPayload(res, { projects: [] }))
         return
       }
       const projects = mergeProjects(res.stdout, res.stderr)
@@ -347,7 +390,7 @@ export function apply (ctx) {
         const id = queryOf(request).get('id')?.trim()
         if (!id) { sendJson(response, 400, { ok: false, error: '缺少素材 id' }); return }
         const res = await runMuseav(['projects', 'assets', 'rm', id], cliOpts())
-        if (!res.ok) { sendJson(response, 200, { ok: false, error: res.error }); return }
+        if (!res.ok) { sendJson(response, 200, failPayload(res)); return }
         sendJson(response, 200, { ok: true, id: res.stdout.trim() || id })
         return
       }
@@ -359,7 +402,7 @@ export function apply (ctx) {
       }
       const res = await runMuseav(['projects', 'assets', '--project', project], cliOpts())
       if (!res.ok) {
-        sendJson(response, 200, { ok: false, error: res.error, assets: [] })
+        sendJson(response, 200, failPayload(res, { assets: [] }))
         return
       }
       sendJson(response, 200, { ok: true, project, assets: mergeAssets(res.stdout, res.stderr) })
@@ -416,7 +459,7 @@ export function apply (ctx) {
         // gen 同步跑完（CLI 自己轮询到终态），实测 20~60s，所以超时给到 5 分钟
         const res = await runMuseav(args, { ...cliOpts(), timeoutMs: GEN_TIMEOUT_MS })
         if (!res.ok) {
-          sendJson(response, 200, { ok: false, error: res.error })
+          sendJson(response, 200, failPayload(res))
           return
         }
         // CLI stdout 是成品直链，一行一条（批量时多行）
@@ -496,7 +539,7 @@ export function apply (ctx) {
 
       const res = await runMuseav(args, cliOpts())
       if (!res.ok) {
-        sendJson(response, 200, { ok: false, error: res.error, templates: [] })
+        sendJson(response, 200, failPayload(res, { templates: [] }))
         return
       }
       sendJson(response, 200, { ok: true, source, templates: mergeTemplates(res.stdout, res.stderr) })
@@ -516,7 +559,7 @@ export function apply (ctx) {
       if (project) args.push('--project', project)
       const res = await runMuseav(args, cliOpts())
       if (!res.ok) {
-        sendJson(response, 200, { ok: false, error: res.error, jobs: [] })
+        sendJson(response, 200, failPayload(res, { jobs: [] }))
         return
       }
       sendJson(response, 200, { ok: true, jobs: summarizeJobs(parseJobArray(res.stdout)) })

@@ -334,3 +334,21 @@ test('挂载时先铺本地快照、后台再刷新 —— CLI 到中台会间�
   // 挂载时 loading 跟着缓存走：有缓存就立刻有画面
   assert.ok(source.includes('loading: false, refreshing: true'), '有缓存时挂载即出画面，后台静默刷新')
 })
+
+test('渲染期不抛 ReferenceError —— 认证改动引入过裸 s 引用', () => {
+  // 2026-11-10 修认证提示时，在 loadTemplates 里写了 `s.authRequired`，
+  // 但那个作用域只有 patch（读不到旧 state）—— 运行时才炸成「s is not defined」，
+  // 编译和 lint 都查不出来。这里跑一遍完整渲染，任何未定义引用都会当场抛出。
+  assert.doesNotThrow(() => render(), '渲染过程抛异常，说明有未定义引用')
+  // 再带一个「认证失效」的状态渲染一次 —— 那条分支才是当初出问题的地方
+  assert.doesNotThrow(
+    () => render({ state: { ...READY, authRequired: true, error: '登录已过期' } }),
+    '认证失效分支渲染抛异常',
+  )
+})
+
+test('认证失效时不重复显示「多半是没登录」的旧提示', () => {
+  const withAuth = render({ state: { ...READY, authRequired: true, error: 'MUSE AV 登录已过期' } })
+  const texts1 = texts(withAuth).join(' ')
+  assert.doesNotMatch(texts1, /多半是没登录/, '认证失效时不该再挂旧的 loginHint')
+})
