@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugins/dsh-museav-assets",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "MUSE AV 创作工作台：从 DSH 侧栏浏览灵感与可用模型、生成作品并管理项目素材。",
   "type": "module",
   "main": "lib/index.js",

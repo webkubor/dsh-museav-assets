@@ -1,6 +1,14 @@
 # Changelog
 
-## [0.4.0](https://github.com/webkubor/dsh-museav-assets/compare/v0.3.0...v0.4.0) (2026-11-08)
+## [0.4.1](https://github.com/webkubor/dsh-museav-assets/compare/v0.4.0...v0.4.1) (2026-11-10)
+
+
+### 🩹 Fixes
+
+* **auth:** 登录过期时插件不再"假装正常"——`/health` 改为真实探测认证状态，面板顶部给出「登录已过期 + 运行 museav login + 刷新按钮」的横幅
+
+
+(https://github.com/webkubor/dsh-museav-assets/compare/v0.3.0...v0.4.0) (2026-11-08)
 
 
 ### ✨ Features
